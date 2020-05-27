@@ -1,0 +1,4 @@
+BasedOnStyle: Google
+AccessModifierOffset: -2
+AllowShortCaseLabelsOnASingleLine: true
+IndentWidth: 4
