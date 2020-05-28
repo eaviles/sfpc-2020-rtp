@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-               BuildableName = "vera-molnar-01.app"
-               BlueprintName = "vera-molnar-01"
-               ReferencedContainer = "container:vera-molnar-01.xcodeproj">
+               BuildableName = "vera-molnar-02.app"
+               BlueprintName = "vera-molnar-02"
+               ReferencedContainer = "container:vera-molnar-02.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -31,9 +31,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "vera-molnar-01.app"
-            BlueprintName = "vera-molnar-01"
-            ReferencedContainer = "container:vera-molnar-01.xcodeproj">
+            BuildableName = "vera-molnar-02.app"
+            BlueprintName = "vera-molnar-02"
+            ReferencedContainer = "container:vera-molnar-02.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -54,9 +54,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "vera-molnar-01.app"
-            BlueprintName = "vera-molnar-01"
-            ReferencedContainer = "container:vera-molnar-01.xcodeproj">
+            BuildableName = "vera-molnar-02.app"
+            BlueprintName = "vera-molnar-02"
+            ReferencedContainer = "container:vera-molnar-02.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -71,9 +71,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "vera-molnar-01.app"
-            BlueprintName = "vera-molnar-01"
-            ReferencedContainer = "container:vera-molnar-01.xcodeproj">
+            BuildableName = "vera-molnar-02.app"
+            BlueprintName = "vera-molnar-02"
+            ReferencedContainer = "container:vera-molnar-02.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
