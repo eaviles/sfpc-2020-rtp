@@ -2,7 +2,11 @@
 
 #include "ofMain.h"
 
-typedef array<int, 16> magicSquare;
+struct Cell {
+    int v;
+    float x;
+    float y;
+};
 
 class ofApp : public ofBaseApp {
   public:
@@ -22,7 +26,8 @@ class ofApp : public ofBaseApp {
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
-    magicSquare durerSquare = {16, 3, 2, 13, 5, 10, 11, 8,
-                               9,  6, 7, 12, 4, 15, 14, 1};
-    magicSquare randomSquares[25];
+    void generateData();
+    void addSquareLinePoints(Cell square[4][4]);
+
+    vector<ofVec2f> linePoints;
 };
