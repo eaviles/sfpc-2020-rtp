@@ -17,3 +17,9 @@ A recreation of Vera Molnár's Hommage à Dürer (1990). 25 squares composed of 
 When I first looked at this artwork I somehow assumed the squares were all magical squares (it's an homenage to [Dürer's Melencoly I](https://www.metmuseum.org/art/collection/search/336228) after all). I took the magical square in Melencoly I and then applied random transformations to get derivated magical squares. The end result ended up looking too "well-organized" and wasn't similar at all to Molnár's original work so I abandoned the idea of using magical squares. It looks great though, so I left the experiment here.
 
 <img src="docs/vera-molnar-02.png" width="512" />
+
+## john-whitney-01
+
+In this sketch I'm trying to replicate the circles that appear [at 3:15](https://youtu.be/TbV7loKp69s?t=196) in John Whitney's Catalog 1961 video. I noticed there's a line of circles that rotates really fast, creating the illusion of many circles. I tried to do the same in code, changing the colors based on time.
+
+<img src="docs/john-whitney-01.gif" width="512" />
