@@ -7,13 +7,12 @@ void ofApp::setup() {
     ofEnableSmoothing();
     ofSetLineWidth(2.0);
 
-    ofTrueTypeFontSettings settings("nicokaku_v1.ttf", 120);
+    ofTrueTypeFontSettings settings("CP-Font-morisawa-edited.ttf", 120);
     settings.antialiased = true;
     settings.contours = true;
     settings.dpi = 72;
     settings.addRanges(ofAlphabet::Japanese);
     font1.load(settings);
-    font1.setLetterSpacing(0.7);
 
     settings = ofTrueTypeFontSettings("MPLUS1p-ExtraBold.ttf", 120);
     settings.antialiased = true;
@@ -44,14 +43,14 @@ void ofApp::draw() {
     string msg2 = "MORISAWA";
     ofRectangle rect2 = font2.getStringBoundingBox(msg2, 0, 0);
 
-    ofTranslate(0, 10);
+    ofTranslate(0, -20);
 
-    int rows = 104;
+    int rows = 107;
     for (int r = 0; r < rows; r++) {
         float ease = ofMap(r, 0, rows - 1, 1.0, 0.0);
         float height = 400 * ofMap(ease, 1.0, 0.08, 1.0, 0.0, true);
         if (r > 0) ofTranslate(0, 24 * ease + 0.1);
-        ofRectangle target(-10, 0, ofGetWidth() * 0.99, height);
+        ofRectangle target(33, 0, ofGetWidth() * 0.965, height);
 
         ofPushMatrix();
         targetRect(rect1, target);
@@ -74,7 +73,7 @@ void ofApp::draw() {
         ofPopMatrix();
     }
 
-    rows = 81;
+    rows = 80;
     for (int r = 0; r < rows; r++) {
         float ease = ofMap(r, rows - 1, 0, 1.0, 0.0);
         float height = 240 * ofMap(ease, 1.0, 0.1, 1.0, 0.0, true) + 2;
