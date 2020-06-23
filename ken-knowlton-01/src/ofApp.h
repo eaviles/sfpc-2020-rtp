@@ -2,7 +2,10 @@
 
 #include "ofMain.h"
 #include "ofxColorQuantizer.h"
+#include "ofxGaussian.h"
 #include "ofxOpenCv.h"
+
+#define ITEMS 42
 
 class ofApp : public ofBaseApp {
   public:
@@ -25,5 +28,13 @@ class ofApp : public ofBaseApp {
     vector<ofImage> fragments;
     vector<vector<ofColor>> fragmentColors;
     int selectedImage;
+    //        int totalFragments = 100;
     int totalFragments = 431;
+//    int totalFragments = 1;
+    ofImage targetImage;
+    vector<ofPath> paths;
+
+    int mosaic[ITEMS][ITEMS];
+    float mosaicRotation[ITEMS][ITEMS];
+    bool showOrg;
 };
