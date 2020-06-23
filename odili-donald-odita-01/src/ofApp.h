@@ -26,6 +26,4 @@ class ofApp : public ofBaseApp {
     void addRightPath(float left, float top);
     void addLeftRhumbus(float left, float top);
     void addRightRhumbus(float left, float top);
-    vector<ofPath> paths;
-    vector<ofColor> colors;
 };

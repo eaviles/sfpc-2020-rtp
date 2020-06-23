@@ -34,6 +34,11 @@ This repository contains my sketches and homework developed for the class.
         john-maeda-01
       </a>
     </td>
+    <td>
+      <a href="odili-donald-odita-01">
+        <img src="odili-donald-odita-01/docs/odili-donald-odita-01.png" width="256" /><br />
+        odili-donald-odita-01
+      </a>
+    </td>
   </tr>
 </table>
-
