@@ -114,7 +114,6 @@ void ofApp::generateData() {
         }
 
         while (top < windowHeight) {
-
             bool doLeft = (int)(top / (cellHeight * 2)) % 2;
             if ((int)(left / cellWidth) % 2 == 1) doLeft = !doLeft;
             if (useRandFlips && ofRandomuf() > 0.8) doLeft = !doLeft;

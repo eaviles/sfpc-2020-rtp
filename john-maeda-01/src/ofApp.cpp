@@ -36,7 +36,6 @@ void targetRect(ofRectangle originalRectangle, ofRectangle target) {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-
     ofBackground(242);
     string msg1 = "モリサワ";
     ofRectangle rect1 = font1.getStringBoundingBox(msg1, 0, 0);

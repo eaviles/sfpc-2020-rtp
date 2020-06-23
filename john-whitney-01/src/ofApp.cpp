@@ -18,7 +18,6 @@ void ofApp::update() {}
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-
     int rings = 12;
     float dots = 512;
     float num, x, r, g, b;
@@ -42,7 +41,6 @@ void ofApp::draw() {
         ofRotateDeg(dotsSep);
 
         for (int i = 0; i < rings; i++) {
-
             float rOff = i * 0.6;
             float alpha = ofMap(sin(time * .3 + rOff * 2), -1, 1, .5, 1.0);
 

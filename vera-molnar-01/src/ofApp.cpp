@@ -30,7 +30,6 @@ void ofApp::generateData() {
     // Generate the cell data for each square.
     for (int row = 0; row < 5; row++) {
         for (int col = 0; col < 5; col++) {
-
             // Get a shuffled vector with numbers from 1 to 16.
             vector<int> v;
             v.resize(16);
