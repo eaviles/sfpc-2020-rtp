@@ -5,20 +5,24 @@ bool hueCompare(ofColor a, ofColor b) { return a.getHue() < b.getHue(); }
 //--------------------------------------------------------------
 void ofApp::setup() {
     showOrg = false;
-    targetImage.load("edgardo.jpg");
+    targetImage.load("spectrum.png");
 
-    for (int i = 0; i < totalFragments; i++) {
+    for (int i = 0; i < TOTAL_FRAGMENTS; i++) {
         cout << "Loading: " << i << endl;
+        fragmentCounters[i] = 0;
 
         ofImage image;
         string file = "fragments/i" + to_string(i) + ".jpg";
         image.load(file);
+        float orgImgWidth = image.getWidth();
+        image.resize(image.getWidth() * 0.2, image.getHeight() * 0.2);
+
         float imageWidth = image.getWidth();
         float imageHeight = image.getHeight();
 
         ofImage imageCopy;
         imageCopy.load(file);
-        imageCopy.resize(imageWidth * 0.2, imageHeight * 0.2);
+        imageCopy.resize(imageCopy.getWidth() * 0.05, imageCopy.getHeight() * 0.05);
         ofxColorQuantizer colorQuantizer;
         colorQuantizer.setNumColors(4);
         colorQuantizer.quantize(imageCopy.getPixels());
@@ -35,7 +39,6 @@ void ofApp::setup() {
         }
         palette.erase(palette.begin() + maxIndex);
 
-
         float avgR = 0;
         float avgG = 0;
         float avgB = 0;
@@ -49,8 +52,6 @@ void ofApp::setup() {
         avgB /= palette.size();
         palette.clear();
         palette.push_back(ofColor(avgR, avgG, avgB));
-
-
 
         ofColor tl = image.getColor(10, 10);
         ofColor tr = image.getColor(imageWidth - 10, 10);
@@ -89,15 +90,17 @@ void ofApp::setup() {
             for (int i = 0; i < fragmentColors.size(); i++) {
                 for (int j = 0; j < fragmentColors[i].size(); j++) {
                     ofColor pc = fragmentColors[i][j];
-                    float dist = ofDist(c.r, c.g, c.b, pc.r, pc.g, pc.b) + ofxGaussian() * 8;//28;
-                    if (dist < closestMatch) {
+                    float dist = ofDist(c.r, c.g, c.b, pc.r, pc.g, pc.b) +
+                                 ofxGaussian() * 4;  // 28;
+                    if (dist < closestMatch && fragmentCounters[i] < 12) {
                         closestMatch = dist;
                         closestFragment = i;
                     }
                 }
             }
 
-            mosaic[normX][normY] = closestFragment;
+            fragmentCounters[closestFragment < 0 ? 0 : closestFragment]++;
+            mosaic[normX][normY] = closestFragment < 0 ? 0 : closestFragment;
             mosaicRotation[normX][normY] = c.getBrightness();
 
             //            ofPath p;
@@ -139,14 +142,15 @@ void ofApp::draw() {
 
             ofColor c = targetImage.getColor(x, y);
 
-                float scale = iw < ih ? skip / ih : skip/iw;
-                ofTranslate(skip / 2, skip / 2);
-                ofScale(scale * ofMap(c.getBrightness(), 0, 255, 1.4, 1.2, true) * 1.5);
-                ofPushMatrix();
-                fragment.setAnchorPercent(0.5, 0.5);
-                ofRotateDeg(mosaicRotation[normX][normY]);
-                fragment.draw(0, 0);
-                ofPopMatrix();
+            float scale = iw < ih ? skip / ih : skip / iw;
+            ofTranslate(skip / 2, skip / 2);
+            ofScale(scale * ofMap(c.getBrightness(), 0, 255, 1.3, 1.0, true) *
+                    1.5);
+            ofPushMatrix();
+            fragment.setAnchorPercent(0.5, 0.5);
+            ofRotateDeg(mosaicRotation[normX][normY]);
+            fragment.draw(0, 0);
+            ofPopMatrix();
 
             //            ofScale(0.3);
             //            fragment.draw(0, 0);
@@ -159,7 +163,7 @@ void ofApp::draw() {
     //        paths[i].draw();
     //    }
 
-    //    int imgIdx = ofMap(mouseX, 0, ofGetWidth(), 0, totalFragments - 1,
+    //    int imgIdx = ofMap(mouseX, 0, ofGetWidth(), 0, TOTAL_FRAGMENTS - 1,
     //    true);
     //
     //    fragments[imgIdx].draw(0, 100);
@@ -187,9 +191,7 @@ void ofApp::mouseMoved(int x, int y) {}
 void ofApp::mouseDragged(int x, int y, int button) {}
 
 //--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button) {
-    showOrg = !showOrg;
-}
+void ofApp::mousePressed(int x, int y, int button) { showOrg = !showOrg; }
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button) {}

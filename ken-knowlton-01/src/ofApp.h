@@ -5,7 +5,8 @@
 #include "ofxGaussian.h"
 #include "ofxOpenCv.h"
 
-#define ITEMS 42
+#define ITEMS 32
+#define TOTAL_FRAGMENTS 410
 
 class ofApp : public ofBaseApp {
   public:
@@ -29,12 +30,12 @@ class ofApp : public ofBaseApp {
     vector<vector<ofColor>> fragmentColors;
     int selectedImage;
     //        int totalFragments = 100;
-    int totalFragments = 431;
-//    int totalFragments = 1;
+    //    int totalFragments = 1;
     ofImage targetImage;
     vector<ofPath> paths;
 
     int mosaic[ITEMS][ITEMS];
     float mosaicRotation[ITEMS][ITEMS];
     bool showOrg;
+    int fragmentCounters[TOTAL_FRAGMENTS];
 };
