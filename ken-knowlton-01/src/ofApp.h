@@ -5,9 +5,10 @@
 #include "ofxGaussian.h"
 #include "ofxOpenCv.h"
 
-#define ITEMS 32
+#define FRAGMENTATION 32
 #define TOTAL_FRAGMENTS 410
 #define MIN_FRG_SIZE 256
+#define MAX_FRG_REUSE 128
 
 class ofApp : public ofBaseApp {
   public:
@@ -29,13 +30,12 @@ class ofApp : public ofBaseApp {
 
     void cacheFragment(int i);
     void colorFragment(ofImage img, int i);
+    int indexOfFragmentByColor(ofColor color);
 
     vector<ofImage> fragments;
     vector<ofColor> fragmentColors;
     ofImage targetImage;
 
-    int mosaic[ITEMS][ITEMS];
-    float mosaicRotation[ITEMS][ITEMS];
     bool showOrg;
     int fragmentCounters[TOTAL_FRAGMENTS];
 };
