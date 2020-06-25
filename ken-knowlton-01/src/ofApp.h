@@ -7,6 +7,7 @@
 
 #define ITEMS 32
 #define TOTAL_FRAGMENTS 410
+#define MIN_FRG_SIZE 256
 
 class ofApp : public ofBaseApp {
   public:
@@ -26,13 +27,12 @@ class ofApp : public ofBaseApp {
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
+    void cacheFragment(int i);
+    void colorFragment(ofImage img, int i);
+
     vector<ofImage> fragments;
-    vector<vector<ofColor>> fragmentColors;
-    int selectedImage;
-    //        int totalFragments = 100;
-    //    int totalFragments = 1;
+    vector<ofColor> fragmentColors;
     ofImage targetImage;
-    vector<ofPath> paths;
 
     int mosaic[ITEMS][ITEMS];
     float mosaicRotation[ITEMS][ITEMS];
