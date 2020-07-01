@@ -21,6 +21,6 @@ class ofApp : public ofBaseApp {
     void gotMessage(ofMessage msg);
 
     vector<ofImage> images;
-    bool useAutoPlay = true;
-    bool useMousePlay = false;
+    vector<ofImage> masks;
+    bool mouseIsDown = false;
 };
