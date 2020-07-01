@@ -22,5 +22,6 @@ class ofApp : public ofBaseApp {
 
     vector<ofImage> images;
     vector<ofImage> masks;
+    vector<vector<int>> edges;
     bool mouseIsDown = false;
 };
