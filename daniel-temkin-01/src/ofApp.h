@@ -23,5 +23,17 @@ class ofApp : public ofBaseApp {
     vector<ofImage> images;
     vector<ofImage> masks;
     vector<vector<int>> edges;
+    vector<ofImage> correctedImages;
+    ofImage averageImage;
     bool mouseIsDown = false;
+
+    bool drawOriginal = true;
+    bool drawMaskEdges = false;
+    bool drawStraightened = false;
+    bool drawAligned = false;
+    bool drawAverage = false;
+
+    bool smoothInitiated = false;
+    float smoothScale = 0.0;
+    float smoothAngle = 0.0;
 };
