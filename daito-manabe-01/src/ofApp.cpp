@@ -24,7 +24,7 @@ void ofApp::setup() {
     palette.push_back(ofColor::green);
     palette.push_back(ofColor::blue);
 
-    finder.setMinArea((float)IMAGE_WIDTH * 0.35);
+    finder.setMinArea((float)IMAGE_WIDTH * 0.25);
 
     for (int i = 0; i < 2048; i++) {
         fieldLines.push_back(fieldLine());
@@ -43,14 +43,14 @@ void ofApp::update() {
         diffImg.update();
 
         thrsImg.setFromPixels(diffImg.getPixels());
-        threshold(thrsImg, 256 * 0.5);
+        threshold(thrsImg, 256 * 0.25);
         thrsImg.update();
 
         auto pxs = grayImg.getPixels();
         for (int x = 0; x < IMAGE_WIDTH; x++) {
             for (int y = 0; y < IMAGE_HEIGHT; y++) {
                 auto p = pxs.getColor(x, y);
-                ofColor c = ofColor(p.r, p.g, p.b, p.r > 128 ? 255 : 0);
+                ofColor c = ofColor(p.r, p.g, p.b, p.r < 160 ? 255 : 0);
                 alphaImg.setColor(x, y, c);
             }
         }
@@ -63,16 +63,16 @@ void ofApp::update() {
 
         ofPath p;
         for (int i = 0; i < finder.size(); i++) {
-            auto pl = finder.getPolyline(i).getResampledByCount(3);
+            auto pl = finder.getPolyline(i).getResampledByCount(12);
             for (int j = 0; j < pl.getVertices().size(); j++) {
                 auto v = pl.getVertices()[j];
-                float rx = ofRandom(-32, 32);
-                float ry = ofRandom(-32, 32);
+                float rx = ofRandom(-4, 4);
+                float ry = ofRandom(-4, 4);
                 if (j == 0) {
                     p.newSubPath();
-                    p.moveTo(v.x + rx, v.y + ry);
+                    p.moveTo(v.x + rx, v.y + ry, ofRandom(-12,12));
                 } else {
-                    p.lineTo(v.x + rx, v.y + ry);
+                    p.lineTo(v.x + rx, v.y + ry, ofRandom(-12,12));
                 }
             }
         }
@@ -107,20 +107,17 @@ void ofApp::draw() {
 
     //    cout << mouseX << " - " << (mouseX + 200) << endl;
 
-    //    grabber.draw(0, 0);
+//        grabber.draw(0, 0);
     //
-    //    grayImg.draw(targetWidth, 0);
+//        grayImg.draw(IMAGE_WIDTH, 0);
     //
-    //    diffImg.draw(targetWidth * 2, 0);
+//        diffImg.draw(0, IMAGE_HEIGHT);
     //
-    //    thrsImg.draw(targetWidth * 3, 0);
+//        thrsImg.draw(IMAGE_WIDTH, IMAGE_HEIGHT);
     //
-    //    ofPushMatrix();
-    //    if (finder.size() > 0) {
-    //        ofTranslate(targetWidth * 4, 0);
-    //        finder.draw();
-    //    }
-    //    ofPopMatrix();
+//        if (finder.size() > 0) {
+//            finder.draw();
+//        }
     //
     //    ofPushMatrix();
     //    ofTranslate(0, 0);
