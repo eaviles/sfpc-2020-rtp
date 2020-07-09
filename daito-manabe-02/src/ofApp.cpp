@@ -6,9 +6,10 @@ void ofApp::setup() {
     ofSetFrameRate(60);
     ofSetVerticalSync(true);
 
-    // grabber.setDeviceID(1);
-    grabber.setup(IMAGE_WIDTH, IMAGE_HEIGHT);
-    tracker.setup();
+    player.load("input.mov");
+    player.setSpeed(1.5);
+    player.play();
+    player.setLoopState(OF_LOOP_NORMAL);
 
     grayImg.allocate(IMAGE_WIDTH, IMAGE_HEIGHT, OF_IMAGE_GRAYSCALE);
     diffImg.allocate(IMAGE_WIDTH, IMAGE_HEIGHT, OF_IMAGE_GRAYSCALE);
@@ -33,12 +34,13 @@ void ofApp::setup() {
 
 //--------------------------------------------------------------
 void ofApp::update() {
-    grabber.update();
-    if (!grabber.isFrameNew()) return;
-    tracker.update(grabber);
+    player.update();
+    if (!player.isFrameNew()) return;
+//    tracker.update(player);
 
     // Get a greyscale image from the camera.
-    convertColor(grabber, grayImg, CV_RGB2GRAY);
+    convertColor(player, grayImg, CV_RGB2GRAY);
+    grayImg.resize(IMAGE_WIDTH, IMAGE_HEIGHT);
     grayImg.update();
 
     // Get the diff to detect motion.
@@ -56,8 +58,8 @@ void ofApp::update() {
             numMovPixels += thrsImg.getColor(x, y).r > 127;
         }
     }
-    smoothNumMovPixels = 0.95 * smoothNumMovPixels + 0.05 * numMovPixels;
-    maxFieldLines = ofMap(smoothNumMovPixels, 0, 32000, 512, 12000, true);
+    smoothNumMovPixels = 0.9 * smoothNumMovPixels + 0.1 * numMovPixels;
+    maxFieldLines = ofMap(smoothNumMovPixels, 0, 16000, 512, 12000, true);
 
     // Store the prev image.
     prevImg.setFromPixels(grayImg.getPixels());
@@ -69,16 +71,16 @@ void ofApp::update() {
     // Convert outlines to shapes.
     ofPath p;
     for (int i = 0; i < motionFinder.size(); i++) {
-        auto pl = motionFinder.getPolyline(i).getResampledByCount(12);
+        auto pl = motionFinder.getPolyline(i).getResampledByCount(24);
         for (int j = 0; j < pl.getVertices().size(); j++) {
             auto v = pl.getVertices()[j];
-            float rx = 0;  // ofRandom(-4, 4);
-            float ry = 0;  // ofRandom(-4, 4);
+            float rx = 0;
+            float ry = 0;
             if (j == 0) {
                 p.newSubPath();
-                p.moveTo(v.x + rx, v.y + ry);  //, ofRandom(-12, 12));
+                p.moveTo(v.x + rx, v.y + ry);
             } else {
-                p.lineTo(v.x + rx, v.y + ry);  //, ofRandom(-12, 12));
+                p.lineTo(v.x + rx, v.y + ry);
             }
         }
     }
@@ -94,8 +96,6 @@ void ofApp::update() {
     // Threshold the camera image to get the body.
     thrsImg.setFromPixels(grayImg.getPixels());
     float bodyThreshold = 256 * 0.65;
-    threshold(thrsImg, bodyThreshold);
-    invert(thrsImg);
     thrsImg.update();
 
     bodyFinder.findContours(thrsImg);
@@ -104,7 +104,7 @@ void ofApp::update() {
     for (int x = 0; x < IMAGE_WIDTH; x++) {
         for (int y = 0; y < IMAGE_HEIGHT; y++) {
             auto c = pxls.getColor(x, y);
-            auto d = ofColor(0, 0, 0, c.r < bodyThreshold ? 255 : 0);
+            auto d = ofColor(0, 0, 0, c.r < bodyThreshold ? 0 : 255);
             bodyImg.setColor(x, y, d);
         }
     }
@@ -145,9 +145,9 @@ void ofApp::drawBody() {
     if (bodyFinder.size() == 0) return;
 
     for (int i = 0; i < bodyFinder.size(); i++) {
-        auto d = bodyFinder.getPolyline(i).getResampledBySpacing(24);
+        auto d = bodyFinder.getPolyline(i).getResampledBySpacing(6);
         ofSetColor(ofColor::white);
-        ofSetLineWidth(12);
+        ofSetLineWidth(6);
         d.draw();
 
         vector<ofPoint> pts;
@@ -160,96 +160,13 @@ void ofApp::drawBody() {
             ofPoint p1 = pts[j - 1];
             ofPoint p2 = pts[j];
             auto d = (p1 - p2).length();
-            if (d > 160) continue;
-            ofSetLineWidth(ofRandomuf() > 0.75 ? 8 : 2);
+            if (d > 80) continue;
+            ofSetLineWidth(d < 40 ? 6 : 2);
             ofDrawLine(p1, p2);
         }
     }
 }
 
-//------------------------------------------------------------------------------
-void ofApp::drawFace() {
-    for (auto instance : tracker.getInstances()) {
-        auto lmks = instance.getLandmarks();
-
-        ofNoFill();
-        ofSetColor(ofColor::white);
-
-        ofSetLineWidth(8);
-        lmks.getImageFeature(ofxFaceTracker2Landmarks::JAW).draw();
-
-        auto leftEyebrowPoly =
-            lmks.getImageFeature(ofxFaceTracker2Landmarks::LEFT_EYEBROW)
-                .getResampledByCount(4);
-        auto rightEyebrowPoly =
-            lmks.getImageFeature(ofxFaceTracker2Landmarks::RIGHT_EYEBROW)
-                .getResampledByCount(4);
-        auto leftEyePoly =
-            lmks.getImageFeature(ofxFaceTracker2Landmarks::LEFT_EYE);
-        auto rightEyePoly =
-            lmks.getImageFeature(ofxFaceTracker2Landmarks::RIGHT_EYE);
-        auto nosePoly =
-            lmks.getImageFeature(ofxFaceTracker2Landmarks::NOSE_BASE);
-        auto outerMouthPoly =
-            lmks.getImageFeature(ofxFaceTracker2Landmarks::OUTER_MOUTH)
-                .getResampledByCount(7);
-        auto innerMouthPoly =
-            lmks.getImageFeature(ofxFaceTracker2Landmarks::INNER_MOUTH)
-                .getResampledByCount(7);
-
-        ofSetLineWidth(8);
-        leftEyebrowPoly.draw();
-        rightEyebrowPoly.draw();
-        nosePoly.draw();
-
-        ofFill();
-        ofSetColor(ofColor::white);
-        ofSetLineWidth(2);
-
-        ofPath leftEyePath;
-        for (int i = 0; i < leftEyePoly.size(); i++) {
-            if (i == 0) {
-                leftEyePath.moveTo(leftEyePoly[i]);
-            } else {
-                leftEyePath.lineTo(leftEyePoly[i]);
-            }
-        }
-        leftEyePath.draw();
-
-        ofPath rightEyePath;
-        for (int i = 0; i < rightEyePoly.size(); i++) {
-            if (i == 0) {
-                rightEyePath.moveTo(rightEyePoly[i]);
-            } else {
-                rightEyePath.lineTo(rightEyePoly[i]);
-            }
-        }
-        rightEyePath.draw();
-
-        ofDrawLine(leftEyePoly[3], rightEyePoly[0]);
-        ofDrawLine(leftEyebrowPoly[3], rightEyebrowPoly[0]);
-        for (int i = 0; i < 4; i++) {
-            ofDrawLine(leftEyePoly[i], leftEyebrowPoly[i]);
-            ofDrawLine(rightEyePoly[i], rightEyebrowPoly[i]);
-        }
-
-        ofDrawLine(nosePoly[0], outerMouthPoly[1]);
-        ofDrawLine(nosePoly[2], outerMouthPoly[1]);
-        ofDrawLine(nosePoly[2], outerMouthPoly[2]);
-        ofDrawLine(nosePoly[4], outerMouthPoly[2]);
-
-        outerMouthPoly.draw();
-        ofPath mouthPath;
-        for (int i = 0; i < innerMouthPoly.size(); i++) {
-            if (i == 0) {
-                mouthPath.moveTo(innerMouthPoly[i]);
-            } else {
-                mouthPath.lineTo(innerMouthPoly[i]);
-            }
-        }
-        mouthPath.draw();
-    }
-}
 
 //--------------------------------------------------------------
 void ofApp::draw() {
@@ -258,10 +175,29 @@ void ofApp::draw() {
     ofScale(2.0);
 
     drawBackground();
+
+    ofTranslate((float)IMAGE_WIDTH * 0.1, (float)IMAGE_HEIGHT * 0.1, (float)IMAGE_HEIGHT * -0.2);
+    ofScale(0.8);
+
+    ofPushMatrix();
+    ofTranslate((float)IMAGE_WIDTH * -0.25, 0, (float)IMAGE_WIDTH * -0.2);
     drawMotion();
     bodyImg.draw(0, 0);
     drawBody();
-    drawFace();
+    ofPopMatrix();
+
+    ofPushMatrix();
+    ofTranslate((float)IMAGE_WIDTH * 0.25, 0, (float)IMAGE_WIDTH * -0.2);
+    drawMotion();
+    bodyImg.draw(0, 0);
+    drawBody();
+    ofPopMatrix();
+
+    ofPushMatrix();
+    drawMotion();
+    bodyImg.draw(0, 0);
+    drawBody();
+    ofPopMatrix();
 }
 
 //--------------------------------------------------------------
