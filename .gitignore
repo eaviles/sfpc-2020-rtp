@@ -62,3 +62,4 @@ Desktop.ini
 
 # Miscellaneous
 .mailmap
+/daito-manabe-01/bin/data/shape_predictor_68_face_landmarks.dat

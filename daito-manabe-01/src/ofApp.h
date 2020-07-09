@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxCv.h"
+#include "ofxFaceTracker2.h"
 
 using namespace ofxCv;
 
@@ -63,6 +64,7 @@ class ofApp : public ofBaseApp {
     void drawBackground();
     void drawMotion();
     void drawBody();
+    void drawFace();
 
     ofImage diffImg;
     ofImage grayImg;
@@ -77,4 +79,5 @@ class ofApp : public ofBaseApp {
     vector<fieldLine> fieldLines;
     vector<ofColor> palette;
     vector<ofPath> history;
+    ofxFaceTracker2 tracker;
 };

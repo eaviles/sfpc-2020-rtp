@@ -1,4 +1,4 @@
 ofxOpenCv
 ofxCv
+ofxFaceTracker2
 ofxGui
-ofxLeapMotion2
