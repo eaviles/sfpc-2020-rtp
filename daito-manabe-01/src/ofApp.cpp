@@ -15,7 +15,6 @@ void ofApp::setup() {
     prevImg.allocate(IMAGE_WIDTH, IMAGE_HEIGHT, OF_IMAGE_GRAYSCALE);
     thrsImg.allocate(IMAGE_WIDTH, IMAGE_HEIGHT, OF_IMAGE_GRAYSCALE);
     bodyImg.allocate(IMAGE_WIDTH, IMAGE_HEIGHT, OF_IMAGE_COLOR_ALPHA);
-    maskImg.load("mask.png");
 
     palette.push_back(ofColor::magenta);
     palette.push_back(ofColor::red);
@@ -27,7 +26,7 @@ void ofApp::setup() {
     motionFinder.setMinArea((float)IMAGE_WIDTH * 0.25);
     bodyFinder.setMinArea((float)IMAGE_WIDTH * 0.25);
 
-    for (int i = 0; i < FIELD_LINES_MAX; i++) {
+    for (int i = 0; i < maxFieldLines; i++) {
         fieldLines.push_back(fieldLine());
     }
 }
@@ -50,6 +49,15 @@ void ofApp::update() {
     thrsImg.setFromPixels(diffImg.getPixels());
     threshold(thrsImg, 256 * 0.25);
     thrsImg.update();
+
+    int numMovPixels = 0;
+    for (int x = 0; x < IMAGE_WIDTH; x++) {
+        for (int y = 0; y < IMAGE_HEIGHT; y++) {
+            numMovPixels += thrsImg.getColor(x, y).r > 127;
+        }
+    }
+    smoothNumMovPixels = 0.95 * smoothNumMovPixels + 0.05 * numMovPixels;
+    maxFieldLines = ofMap(smoothNumMovPixels, 0, 32000, 512, 12000, true);
 
     // Store the prev image.
     prevImg.setFromPixels(grayImg.getPixels());
@@ -105,10 +113,14 @@ void ofApp::update() {
 
 //------------------------------------------------------------------------------
 void ofApp::drawBackground() {
+    while (fieldLines.size() > maxFieldLines) {
+        fieldLines.erase(fieldLines.end() - 1);
+    }
+    while (fieldLines.size() < maxFieldLines) {
+        fieldLines.push_back(fieldLine());
+    }
+
     for (int i = 0; i < fieldLines.size(); i++) {
-        if (i == FIELD_LINES_MASK_INDEX) {
-            maskImg.draw(0, 0);
-        }
         fieldLine l = fieldLines[i];
         if (l.z - l.l > -FIELD_LINES_DEPTH) {
             ofSetLineWidth(l.w);

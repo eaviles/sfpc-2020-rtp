@@ -8,8 +8,7 @@ using namespace ofxCv;
 
 #define IMAGE_WIDTH 640
 #define IMAGE_HEIGHT 480
-#define FIELD_LINES_MAX 2048
-#define FIELD_LINES_MASK_INDEX 1800
+#define FIELD_LINES_MASK_THRESHOLD 0.75
 #define FIELD_LINES_DEPTH 2400
 #define FIELD_LINES_SPEED 24
 
@@ -68,10 +67,11 @@ class ofApp : public ofBaseApp {
 
     ofImage diffImg;
     ofImage grayImg;
-    ofImage maskImg;
     ofImage prevImg;
     ofImage thrsImg;
     ofImage bodyImg;
+    int maxFieldLines = 512;
+    float smoothNumMovPixels = 0;
 
     ContourFinder motionFinder;
     ContourFinder bodyFinder;
