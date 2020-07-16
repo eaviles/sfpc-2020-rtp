@@ -7,6 +7,8 @@
 
 #define SHOW_GUI true
 
+using namespace glm;
+
 class ofApp : public ofBaseApp {
   public:
     void setup();
@@ -39,7 +41,6 @@ class ofApp : public ofBaseApp {
 
     ofxPanel gui;
     ofParameter<string> fps;
-    ofParameter<glm::vec3> cameraTarget;
-    ofParameter<glm::vec3> cameraOrientation;
-    ofParameter<glm::vec3> cameraPosition;
+    ofParameter<vec3> cameraOrientation;
+    ofParameter<vec3> cameraPosition;
 };

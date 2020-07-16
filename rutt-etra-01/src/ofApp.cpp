@@ -27,14 +27,12 @@ void ofApp::setup() {
 
     cam.setAutoDistance(false);
 
-    glm::vec3 vals = {0.0, 0.0, 0.0};
-    glm::vec3 mins = {-2400, -2400, -2400};
-    glm::vec3 maxs = {2400, 2400, 2400};
     gui.setup("Settings", "settings.xml");
     gui.add(fps.set("FPS", "?"));
-    gui.add(cameraTarget.set("target", vals, mins, maxs));
-    gui.add(cameraOrientation.set("orientation", vals, mins, maxs));
-    gui.add(cameraPosition.set("position", {0, 0, 1200}, mins, maxs));
+    gui.add(
+        cameraOrientation.set("orientation", vec3(0), vec3(-180), vec3(180)));
+    gui.add(cameraPosition.set("position", vec3(0, 0, 1200), vec3(-2400),
+                               vec3(2400)));
     gui.loadFromFile("settings.xml");
 }
 
@@ -60,7 +58,7 @@ void ofApp::update() {
 
         if (points.size() > 0) {
             auto vertices = points.get_vertices();
-            for (int y = 0; y < height; y += 5) {
+            for (int y = 0; y < height; y += 4) {
                 ofMesh newMesh;
                 meshes.push_back(newMesh);
                 meshes.back().setMode(OF_PRIMITIVE_LINE_STRIP);
@@ -82,7 +80,7 @@ void ofApp::update() {
                         if (vz < minZ) minZ = vz;
                         if (vz > maxZ) maxZ = vz;
 
-                        meshes.back().addVertex(glm::vec3(vx, vy, vz));
+                        meshes.back().addVertex(vec3(vx, vy, vz));
                         float r = colors[i * 3];
                         float g = colors[(i * 3) + 1];
                         float b = colors[(i * 3) + 2];
@@ -91,7 +89,7 @@ void ofApp::update() {
                         float vx = ofMap(x, 0, width - 1, minX, maxX, true);
                         float vy = ofMap(y, 0, height - 1, minY, maxY, true);
                         float vz = maxZ;
-                        meshes.back().addVertex(glm::vec3(vx, vy, vz));
+                        meshes.back().addVertex(vec3(vx, vy, vz));
                         meshes.back().addColor(
                             ofColor(ofMap(y, 0, height - 1, 255 * 0.25, 0)));
                     }
@@ -100,9 +98,8 @@ void ofApp::update() {
         }
     }
 
-    cam.setTarget(cameraTarget);
-    cam.setOrientation(cameraOrientation);
     cam.setPosition(cameraPosition);
+    cam.setOrientation(cameraOrientation);
 }
 
 //--------------------------------------------------------------
@@ -137,17 +134,16 @@ void ofApp::keyReleased(int key) {}
 void ofApp::mouseMoved(int x, int y) {}
 
 //--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button) {}
+void ofApp::mouseDragged(int x, int y, int button) {
+    cameraPosition = cam.getPosition();
+    cameraOrientation = cam.getOrientationEulerDeg();
+}
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button) {}
 
 //--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button) {
-    cameraTarget = cam.getTarget().getOrientationEulerDeg();
-    cameraOrientation = cam.getOrientationEulerDeg();
-    cameraPosition = cam.getPosition();
-}
+void ofApp::mouseReleased(int x, int y, int button) {}
 
 //--------------------------------------------------------------
 void ofApp::mouseEntered(int x, int y) {}
