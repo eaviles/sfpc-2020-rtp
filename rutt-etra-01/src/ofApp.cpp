@@ -38,68 +38,102 @@ void ofApp::setup() {
 
 //--------------------------------------------------------------
 void ofApp::update() {
-    if (pipe.poll_for_frames(&frames)) {
-        rs2::align align_to_color(RS2_STREAM_COLOR);
-        frames = align_to_color.process(frames);
+    cam.setOrientation(cameraOrientation);
+    cam.setPosition(cameraPosition);
 
-        auto depth = frames.get_depth_frame();
-        int width = depth.get_width();
-        int height = depth.get_height();
+    if (!pipe.poll_for_frames(&frames)) return;
+    rs2::align align_to_color(RS2_STREAM_COLOR);
+    frames = align_to_color.process(frames);
 
-        depth = thrFilter.process(depth);
-        depth = tmpFilter.process(depth);
+    auto depth = frames.get_depth_frame();
+    int width = depth.get_width();
+    int height = depth.get_height();
 
-        auto color = frames.get_color_frame();
-        pc.map_to(color);
-        points = pc.calculate(depth);
-        auto colors = (const unsigned char*)color.get_data();
+    depth = thrFilter.process(depth);
+    depth = tmpFilter.process(depth);
 
-        meshes.clear();
+    auto color = frames.get_color_frame();
+    pc.map_to(color);
+    points = pc.calculate(depth);
+    int numOfPoints = points.size();
+    auto colors = (const unsigned char*)color.get_data();
 
-        if (points.size() > 0) {
-            auto vertices = points.get_vertices();
-            for (int y = 0; y < height; y += 4) {
-                ofMesh newMesh;
-                meshes.push_back(newMesh);
-                meshes.back().setMode(OF_PRIMITIVE_LINE_STRIP);
-                meshes.back().enableColors();
+    meshes.clear();
 
-                for (int x = 0; x < width; x += 5) {
-                    int i = x + y * width;
-
-                    if (vertices[i].z) {
-                        auto v = vertices[i];
-                        float vx = v.x * 1000;
-                        float vy = v.y * 1000;
-                        float vz = (v.z - 1.4) * 1000;
-
-                        if (vx < minX) minX = vx;
-                        if (vx > maxX) maxX = vx;
-                        if (vy < minY) minY = vy;
-                        if (vy > maxY) maxY = vy;
-                        if (vz < minZ) minZ = vz;
-                        if (vz > maxZ) maxZ = vz;
-
-                        meshes.back().addVertex(vec3(vx, vy, vz));
-                        float r = colors[i * 3];
-                        float g = colors[(i * 3) + 1];
-                        float b = colors[(i * 3) + 2];
-                        meshes.back().addColor(ofColor(r, g, b));
-                    } else {
-                        float vx = ofMap(x, 0, width - 1, minX, maxX, true);
-                        float vy = ofMap(y, 0, height - 1, minY, maxY, true);
-                        float vz = maxZ;
-                        meshes.back().addVertex(vec3(vx, vy, vz));
-                        meshes.back().addColor(
-                            ofColor(ofMap(y, 0, height - 1, 255 * 0.25, 0)));
-                    }
-                }
-            }
+    if (numOfPoints != offsets.size()) {
+        offsets.clear();
+        for (int i = 0; i < numOfPoints; i++) {
+            offsets.push_back(
+                {ofRandom(0, 10000), ofRandom(0, 10000), ofRandom(0, 10000)});
         }
     }
 
-    cam.setPosition(cameraPosition);
-    cam.setOrientation(cameraOrientation);
+    if (numOfPoints == 0) return;
+    float t = ofGetElapsedTimef();
+
+    auto vertices = points.get_vertices();
+    for (int y = 0; y < height; y += 5) {
+        ofMesh newMesh;
+        meshes.push_back(newMesh);
+        meshes.back().setMode(OF_PRIMITIVE_LINE_STRIP);
+        meshes.back().enableColors();
+
+        for (int x = 0; x < width; x += 10) {
+            int i = x + y * width;
+
+            if (vertices[i].z) {
+                auto v = vertices[i];
+                float vx = v.x * 1000;
+                float vy = v.y * 1000;
+                float vz = (v.z - 1.4) * 1000;
+
+                if (vx < minX) minX = vx;
+                if (vx > maxX) maxX = vx;
+                if (vy < minY) minY = vy;
+                if (vy > maxY) maxY = vy;
+                if (vz < minZ) minZ = vz;
+                if (vz > maxZ) maxZ = vz;
+
+                auto offset = offsets[i];
+
+                if (y > (float)height * .3 && y < (float)height * .6) {
+                    float displacement = 320.0 * ((sin(t * .5) + 1.0) / 2.0);
+                    vx += ofNoise(offset.x + t * 6.0) * displacement / 10.0;
+                    vy += ofNoise(offset.y + t * 6.0) * displacement / 10.0;
+                    float vzd = ofNoise(offset.z + t * 6.0) * displacement;
+                    vzd *= ofNoise((float)x * .0075, (float)y * .0075, t * .5);
+                    vzd *= ofMap(y, 0, height - 1, 1.0, 0, true);
+                    vz -= vzd;
+                }
+
+                meshes.back().addVertex(vec3(vx, vy, vz));
+                float r = colors[i * 3];
+                float g = colors[(i * 3) + 1];
+                float b = colors[(i * 3) + 2];
+                meshes.back().addColor(ofColor(r, g, b));
+            } else {
+                float vx = ofMap(x, 0, width - 1, minX, maxX, true);
+                float vy = ofMap(y, 0, height - 1, minY, maxY, true);
+                float vz = maxZ;
+
+                auto offset = offsets[i];
+
+                float displacement = 160.0 + 80.0 * ((sin(t * .5) + 1.0) / 2.0);
+                vx += ofNoise(offset.x + t * 3.0) * displacement / 5.0;
+                vy += ofNoise(offset.x + t * 3.0) * displacement / 5.0;
+                float vzd = ofNoise(offset.z + t * 2.0) * displacement;
+                vzd *= ofNoise((float)x * .0075, (float)y * .0075, t * .5);
+                vz -= vzd;
+
+                float cdy = ofMap(y, 0, height - 1, 1.0, 0);
+                float cdz = ofMap(vzd * 1.0, 0, displacement, .25, 1, true);
+                float cd = cdy * cdz;
+
+                meshes.back().addVertex(vec3(vx, vy, vz));
+                meshes.back().addColor(ofColor(cd * 128));
+            }
+        }
+    }
 }
 
 //--------------------------------------------------------------
@@ -110,7 +144,7 @@ void ofApp::draw() {
     ofPushMatrix();
     cam.begin();
     ofScale(1, -1, -1);
-    ofSetLineWidth(5.0);
+    ofSetLineWidth(6.0);
     for (int i = 0; i < meshes.size(); i++) {
         meshes[i].draw();
     }
@@ -134,16 +168,18 @@ void ofApp::keyReleased(int key) {}
 void ofApp::mouseMoved(int x, int y) {}
 
 //--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button) {
-    cameraPosition = cam.getPosition();
-    cameraOrientation = cam.getOrientationEulerDeg();
-}
+void ofApp::mouseDragged(int x, int y, int button) {}
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button) {}
 
 //--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button) {}
+void ofApp::mouseReleased(int x, int y, int button) {
+    if (SHOW_GUI) {
+        cameraOrientation = cam.getOrientationEulerDeg();
+        cameraPosition = cam.getPosition();
+    }
+}
 
 //--------------------------------------------------------------
 void ofApp::mouseEntered(int x, int y) {}

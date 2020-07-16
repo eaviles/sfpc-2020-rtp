@@ -5,7 +5,7 @@
 #include "ofMain.h"
 #include "ofxGui.h"
 
-#define SHOW_GUI true
+#define SHOW_GUI false
 
 using namespace glm;
 
@@ -38,6 +38,7 @@ class ofApp : public ofBaseApp {
 
     vector<ofMesh> meshes;
     float minX, minY, minZ, maxX, maxY, maxZ;
+    vector<vec3> offsets;
 
     ofxPanel gui;
     ofParameter<string> fps;
