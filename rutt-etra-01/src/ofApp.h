@@ -44,4 +44,7 @@ class ofApp : public ofBaseApp {
     ofParameter<string> fps;
     ofParameter<vec3> cameraOrientation;
     ofParameter<vec3> cameraPosition;
+
+    ofFbo fbo;
+    ofShader shader;
 };

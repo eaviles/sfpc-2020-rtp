@@ -34,12 +34,21 @@ void ofApp::setup() {
     gui.add(cameraPosition.set("position", vec3(0, 0, 1200), vec3(-2400),
                                vec3(2400)));
     gui.loadFromFile("settings.xml");
+    cam.setOrientation(cameraOrientation);
+    cam.setPosition(cameraPosition);
+
+    shader.load("", "shader.frag");
+    fbo.allocate(ofGetWidth(), ofGetHeight());
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
-    cam.setOrientation(cameraOrientation);
-    cam.setPosition(cameraPosition);
+    if (SHOW_GUI) {
+        cam.setOrientation(cameraOrientation);
+        cam.setPosition(cameraPosition);
+    }
+
+    if (ofGetFrameNum() % 60) shader.load("", "shader.frag");
 
     if (!pipe.poll_for_frames(&frames)) return;
     rs2::align align_to_color(RS2_STREAM_COLOR);
@@ -138,10 +147,11 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    ofBackground(0);
-    ofEnableDepthTest();
+    ofBackground(255);
 
-    ofPushMatrix();
+    fbo.begin();
+    ofClear(0, 0, 0, 255);
+    ofEnableDepthTest();
     cam.begin();
     ofScale(1, -1, -1);
     ofSetLineWidth(6.0);
@@ -149,8 +159,18 @@ void ofApp::draw() {
         meshes[i].draw();
     }
     cam.end();
-    ofPopMatrix();
     ofDisableDepthTest();
+    fbo.end();
+
+    shader.begin();
+    shader.setUniform1f("time", ofGetElapsedTimef());
+    shader.setUniform2f("mouse", mouseX, mouseY);
+    shader.setUniform2f("resolution", ofGetWidth(), ofGetHeight());
+    shader.setUniformTexture("img", fbo, 0);
+    ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
+    shader.end();
+
+    //    fbo.draw(0,0);
 
     if (SHOW_GUI) {
         fps = ofToString(ofGetFrameRate(), 2);
