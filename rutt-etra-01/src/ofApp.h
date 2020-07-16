@@ -3,6 +3,9 @@
 #include <librealsense2/rs.hpp>
 
 #include "ofMain.h"
+#include "ofxGui.h"
+
+#define SHOW_GUI true
 
 class ofApp : public ofBaseApp {
   public:
@@ -27,12 +30,16 @@ class ofApp : public ofBaseApp {
     rs2::points points;
     rs2::pointcloud pc;
     ofEasyCam cam;
-    rs2::decimation_filter decFilter;
     rs2::threshold_filter thrFilter;
     rs2::temporal_filter tmpFilter;
-    // rs2::hole_filling_filter hleFilter;
     rs2::frameset frames;
 
     vector<ofMesh> meshes;
     float minX, minY, minZ, maxX, maxY, maxZ;
+
+    ofxPanel gui;
+    ofParameter<string> fps;
+    ofParameter<glm::vec3> cameraTarget;
+    ofParameter<glm::vec3> cameraOrientation;
+    ofParameter<glm::vec3> cameraPosition;
 };

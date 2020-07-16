@@ -13,7 +13,6 @@ void ofApp::setup() {
     tmpFilter.set_option(RS2_OPTION_FILTER_SMOOTH_ALPHA, 0.4);
     tmpFilter.set_option(RS2_OPTION_FILTER_SMOOTH_DELTA, 20.0);
     tmpFilter.set_option(RS2_OPTION_HOLES_FILL, 3);
-    // hleFilter.set_option(RS2_OPTION_HOLES_FILL, 2);
 
     minX = -518.42;
     maxX = 513.25;
@@ -25,6 +24,18 @@ void ofApp::setup() {
     ofEnableDepthTest();
     ofSetupScreenPerspective();
     ofEnableSmoothing();
+
+    cam.setAutoDistance(false);
+
+    glm::vec3 vals = {0.0, 0.0, 0.0};
+    glm::vec3 mins = {-2400, -2400, -2400};
+    glm::vec3 maxs = {2400, 2400, 2400};
+    gui.setup("Settings", "settings.xml");
+    gui.add(fps.set("FPS", "?"));
+    gui.add(cameraTarget.set("target", vals, mins, maxs));
+    gui.add(cameraOrientation.set("orientation", vals, mins, maxs));
+    gui.add(cameraPosition.set("position", {0, 0, 1200}, mins, maxs));
+    gui.loadFromFile("settings.xml");
 }
 
 //--------------------------------------------------------------
@@ -37,7 +48,6 @@ void ofApp::update() {
         int width = depth.get_width();
         int height = depth.get_height();
 
-        // depth = hleFilter.process(depth);
         depth = thrFilter.process(depth);
         depth = tmpFilter.process(depth);
 
@@ -89,12 +99,18 @@ void ofApp::update() {
             }
         }
     }
+
+    cam.setTarget(cameraTarget);
+    cam.setOrientation(cameraOrientation);
+    cam.setPosition(cameraPosition);
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
     ofBackground(0);
+    ofEnableDepthTest();
 
+    ofPushMatrix();
     cam.begin();
     ofScale(1, -1, -1);
     ofSetLineWidth(5.0);
@@ -102,10 +118,13 @@ void ofApp::draw() {
         meshes[i].draw();
     }
     cam.end();
+    ofPopMatrix();
+    ofDisableDepthTest();
 
-    ofSetColor(255);
-    string msg = "fps: " + ofToString(ofGetFrameRate(), 2);
-    ofDrawBitmapString(msg, 10, 20);
+    if (SHOW_GUI) {
+        fps = ofToString(ofGetFrameRate(), 2);
+        gui.draw();
+    }
 }
 
 //--------------------------------------------------------------
@@ -124,7 +143,11 @@ void ofApp::mouseDragged(int x, int y, int button) {}
 void ofApp::mousePressed(int x, int y, int button) {}
 
 //--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button) {}
+void ofApp::mouseReleased(int x, int y, int button) {
+    cameraTarget = cam.getTarget().getOrientationEulerDeg();
+    cameraOrientation = cam.getOrientationEulerDeg();
+    cameraPosition = cam.getPosition();
+}
 
 //--------------------------------------------------------------
 void ofApp::mouseEntered(int x, int y) {}
