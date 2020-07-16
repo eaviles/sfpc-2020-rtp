@@ -36,7 +36,7 @@ void ofApp::setup() {
 void ofApp::update() {
     player.update();
     if (!player.isFrameNew()) return;
-//    tracker.update(player);
+    //    tracker.update(player);
 
     // Get a greyscale image from the camera.
     convertColor(player, grayImg, CV_RGB2GRAY);
@@ -167,7 +167,6 @@ void ofApp::drawBody() {
     }
 }
 
-
 //--------------------------------------------------------------
 void ofApp::draw() {
     ofBackground(ofColor::black);
@@ -176,7 +175,8 @@ void ofApp::draw() {
 
     drawBackground();
 
-    ofTranslate((float)IMAGE_WIDTH * 0.1, (float)IMAGE_HEIGHT * 0.1, (float)IMAGE_HEIGHT * -0.2);
+    ofTranslate((float)IMAGE_WIDTH * 0.1, (float)IMAGE_HEIGHT * 0.1,
+                (float)IMAGE_HEIGHT * -0.2);
     ofScale(0.8);
 
     ofPushMatrix();
