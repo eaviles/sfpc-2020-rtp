@@ -116,9 +116,9 @@ void ofApp::update() {
                 }
 
                 meshes.back().addVertex(vec3(vx, vy, vz));
-                float r = colors[i * 3];
-                float g = colors[(i * 3) + 1];
-                float b = colors[(i * 3) + 2];
+                float r = ofClamp(colors[i * 3] * 2.0, 0, 255);
+                float g = ofClamp(colors[(i * 3) + 1] * 2.0, 0, 255);
+                float b = ofClamp(colors[(i * 3) + 2] * 2.0, 0, 255);
                 meshes.back().addColor(ofColor(r, g, b));
             } else {
                 float vx = ofMap(x, 0, width - 1, minX, maxX, true);
