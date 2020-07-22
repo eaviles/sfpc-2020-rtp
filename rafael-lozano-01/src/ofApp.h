@@ -25,7 +25,11 @@ class ofApp : public ofBaseApp {
     vector<ofImage> photos;
     vector<string> names;
     ofxFaceTracker2 tracker;
+    ofxFaceTracker2 videoTracker;
+    ofVideoGrabber grabber;
 
     int idx = 0;
     int lastIdx = -1;
+    ofPoint slep;
+    ofPoint srep;
 };
