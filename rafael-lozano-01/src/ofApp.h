@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxCv.h"
+#include "ofxFaceTracker2.h"
 
 class ofApp : public ofBaseApp {
   public:
@@ -22,4 +24,8 @@ class ofApp : public ofBaseApp {
 
     vector<ofImage> photos;
     vector<string> names;
+    ofxFaceTracker2 tracker;
+
+    int idx = 0;
+    int lastIdx = -1;
 };

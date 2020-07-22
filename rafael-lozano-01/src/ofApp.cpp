@@ -10,17 +10,28 @@ void ofApp::setup() {
         photos.back().load(dir.getPath(i));
         names.push_back(dir.getName(i));
     }
+
+    tracker.setup();
+    tracker.setThreaded(false);
 }
 
 //--------------------------------------------------------------
-void ofApp::update() {}
+void ofApp::update() {
+    idx = ofMap(mouseX, 0, ofGetWidth(), 0, photos.size() - 1, true);
+    if (idx != lastIdx) {
+        tracker.update(photos[idx]);
+        lastIdx = idx;
+    }
+}
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    int idx = ofMap(mouseX, 0, ofGetWidth(), 0, photos.size() - 1, true);
     photos[idx].draw(0, 50);
     ofSetColor(ofColor::white);
     ofDrawBitmapString(names[idx], 0, 20);
+    ofTranslate(0, 50);
+    tracker.drawDebug();
+    tracker.drawDebugPose();
 }
 
 //--------------------------------------------------------------
