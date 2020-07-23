@@ -101,6 +101,7 @@ int ofApp::compareWithFaces(ofxFaceTracker2 &tracker) {
         }
     }
 
+    cout << max * 100 << "%" << endl;
     idx = maxIdx;
 }
 
