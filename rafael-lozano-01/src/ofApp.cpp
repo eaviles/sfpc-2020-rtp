@@ -169,29 +169,58 @@ void ofApp::setup() {
     cout << names.size() << " students loaded." << endl;
 
     tracker.setThreaded(true);
-//    grabber.setDeviceID(1);
-//    grabber.setup(640, 480);
+    //    grabber.setDeviceID(1);
+    //    grabber.setup(640, 480);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
     //    idx = ofMap(mouseX, 0, ofGetWidth(), 0, photos.size() - 1, true);
 
-//    grabber.update();
-//    if (grabber.isFrameNew()) {
-//        tracker.update(grabber);
+    //    grabber.update();
+    //    if (grabber.isFrameNew()) {
+    //        tracker.update(grabber);
 
-        if (ofGetElapsedTimef() - lastCheck > 1) {
-            lastCheck = ofGetElapsedTimef();
-//            if (tracker.size() > 0) {
-//                cout << "checking!" << endl;
-//                compareWithFaces(tracker);
-//            } else {
-            idx = (idx + 1) % photos.size();
-//            }
+    if (ofGetElapsedTimef() - lastCheck > 1) {
+        lastCheck = ofGetElapsedTimef();
+        //            if (tracker.size() > 0) {
+        //                cout << "checking!" << endl;
+        //                compareWithFaces(tracker);
+        //            } else {
+        idx = (idx + 1) % photos.size();
+        //            }
+    }
+
+    //    }
+}
+
+//--------------------------------------------------------------
+void ofApp::prepareFbo(int fboIdx) {
+    if (fbos[fboIdx].isAllocated()) return;
+
+    fbos[fboIdx].allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
+    fbos[fboIdx].begin();
+    ofClear(170, 170, 170, 255);
+    auto eyesLocation = eyes[fboIdx];
+    ofImage photo = photos[fboIdx];
+    for (int x = 0; x < photo.getWidth(); x++) {
+        for (int y = 0; y < photo.getHeight(); y++) {
+            float b = photo.getColor(x, y).getBrightness();
+            ofColor c = ofColor(b);
+            photo.setColor(x, y, c);
         }
-
-//    }
+    }
+    photo.update();
+    photo.setAnchorPoint(eyesLocation.left.x, eyesLocation.left.y);
+    float dist = (eyesLocation.left - eyesLocation.right).length();
+    ofPoint diff = eyesLocation.right - eyesLocation.left;
+    float angle = atan2(diff.y, diff.x);
+    float scale = 150.0 / dist;
+    ofTranslate(420, 300);
+    ofScale(scale, scale);
+    ofRotateZRad(-angle);
+    photo.draw(0, 0);
+    fbos[idx].end();
 }
 
 //--------------------------------------------------------------
@@ -199,36 +228,11 @@ void ofApp::draw() {
     ofBackground(ofColor::white);
     ofSetColor(ofColor::white);
 
-    if (!fbos[idx].isAllocated()) {
-        fbos[idx].allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
-        fbos[idx].begin();
-        ofClear(170, 170, 170, 255);
-        auto eyesLocation = eyes[idx];
-        ofImage photo = photos[idx];
-        for (int x = 0; x < photo.getWidth(); x++) {
-            for (int y = 0; y < photo.getHeight(); y++) {
-                float b = photo.getColor(x, y).getBrightness();
-                ofColor c = ofColor(b);
-                photo.setColor(x, y, c);
-            }
-        }
-        photo.update();
-        photo.setAnchorPoint(eyesLocation.left.x, eyesLocation.left.y);
-        float dist = (eyesLocation.left - eyesLocation.right).length();
-        ofPoint diff = eyesLocation.right - eyesLocation.left;
-        float angle = atan2(diff.y, diff.x);
-        float scale = 150.0 / dist;
-        ofTranslate(420, 300);
-        ofScale(scale, scale);
-        ofRotateZRad(-angle);
-        photo.draw(0, 0);
-        fbos[idx].end();
-    }
+    prepareFbo(idx);
 
-
-//    grabber.draw(300, 160);
+    //    grabber.draw(300, 160);
     fbos[idx].draw(0, 0);
-//    tracker.drawDebug(300, 160);
+    //    tracker.drawDebug(300, 160);
 
     // Debug
     auto m = measures[idx];
@@ -242,8 +246,6 @@ void ofApp::draw() {
             "noseBridge: " + ofToString(m.noseBridge, 5) + "\n" + "lip: " +
             ofToString(m.lip, 5) + "\n" + "jaw: " + ofToString(m.jaw, 5),
         40, 40);
-
-
 }
 
 //--------------------------------------------------------------

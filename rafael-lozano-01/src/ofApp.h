@@ -47,6 +47,7 @@ class ofApp : public ofBaseApp {
 
     FaceMeasures measureFace(ofxFaceTracker2 &tracker);
     int compareWithFaces(ofxFaceTracker2 &tracker);
+    void prepareFbo(int fboIdx);
 
     vector<ofImage> photos;
     vector<StudentName> names;
