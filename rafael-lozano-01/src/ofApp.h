@@ -52,6 +52,7 @@ class ofApp : public ofBaseApp {
     vector<StudentName> names;
     vector<FaceMeasures> measures;
     vector<EyesLocation> eyes;
+    vector<ofFbo> fbos;
 
     ofxFaceTracker2 tracker;
     ofVideoGrabber grabber;
