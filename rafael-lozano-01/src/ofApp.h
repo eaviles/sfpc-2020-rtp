@@ -12,6 +12,12 @@ struct FaceMeasures {
     float mouth;
     float lip;
     float jaw;
+    float faceProp;
+};
+
+struct StudentName {
+    string firstName;
+    string lastName;
 };
 
 class ofApp : public ofBaseApp {
@@ -32,14 +38,14 @@ class ofApp : public ofBaseApp {
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
-    vector<ofImage> photos;
-    vector<string> names;
-    ofxFaceTracker2 tracker;
-    ofxFaceTracker2 videoTracker;
-    ofVideoGrabber grabber;
+    FaceMeasures measureFace(ofxFaceTracker2 &tracker);
+    int compareWithFaces(ofxFaceTracker2 &tracker);
 
-    int idx = 0;
-    int lastIdx = -1;
-    ofPoint slep;
-    ofPoint srep;
+    vector<ofImage> photos;
+    vector<StudentName> names;
+    vector<FaceMeasures> measures;
+
+    ofxFaceTracker2 tracker;
+    ofVideoGrabber grabber;
+    int idx;
 };

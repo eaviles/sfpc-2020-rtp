@@ -1,6 +1,7 @@
 #include "ofApp.h"
 
-FaceMeasures measureFace(ofxFaceTracker2 &tracker) {
+//--------------------------------------------------------------
+FaceMeasures ofApp::measureFace(ofxFaceTracker2 &tracker) {
     auto lmks = tracker.getInstances()[0].getLandmarks();
 
     auto leyf = lmks.getImageFeature(ofxFaceTracker2Landmarks::LEFT_EYE);
@@ -43,13 +44,11 @@ FaceMeasures measureFace(ofxFaceTracker2 &tracker) {
     float faceWidth = (rjwp - ljwp).length();
 
     // Distance between the top center and the bottom of the jaw.
-    ofSetColor(ofColor::green);
     ofPoint tjwp = (ljwp + rjwp) / 2.0;
     ofPoint bjwp = rjwv[0];
     float faceHeight = (bjwp - tjwp).length();
 
     // Distance between the top of the bridge and the bottom of the nose.
-    ofSetColor(ofColor::orange);
     ofPoint tnsp = nobf.getVertices()[0];
     ofPoint bnsp = nosv[nosv.size() / 2.0];
     float noseBridge = (bnsp - tnsp).length();
@@ -73,70 +72,117 @@ FaceMeasures measureFace(ofxFaceTracker2 &tracker) {
     measures.noseBridge = noseBridge / faceHeight;
     measures.lip = lip / faceHeight;
     measures.jaw = jaw / faceHeight;
+    measures.faceProp = faceWidth / faceHeight;
 
     return measures;
 }
 
 //--------------------------------------------------------------
+int ofApp::compareWithFaces(ofxFaceTracker2 &tracker) {
+    auto m = measureFace(tracker);
+
+    float max = 0;
+    float maxIdx = -1;
+
+    for (int i = 0; i < measures.size(); i++) {
+        auto mi = measures[i];
+        float d1 = 1.0 - ofDist(m.eyes, 0, mi.eyes, 0);
+        float d2 = 1.0 - ofDist(m.eyebrows, 0, mi.eyebrows, 0);
+        float d3 = 1.0 - ofDist(m.noseBase, 0, mi.noseBase, 0);
+        float d4 = 1.0 - ofDist(m.noseBridge, 0, mi.noseBridge, 0);
+        float d5 = 1.0 - ofDist(m.mouth, 0, mi.mouth, 0);
+        float d6 = 1.0 - ofDist(m.lip, 0, mi.lip, 0);
+        float d7 = 1.0 - ofDist(m.jaw, 0, mi.jaw, 0);
+        float d8 = 1.0 - ofDist(m.faceProp, 0, mi.faceProp, 0);
+        float conf = d1 * d2 * d3 * d4 * d5 * d6 * d7;
+        if (conf > max) {
+            max = conf;
+            maxIdx = i;
+        }
+    }
+
+    idx = maxIdx;
+}
+
+//--------------------------------------------------------------
 void ofApp::setup() {
+    tracker.setup();
+    tracker.setThreaded(false);
+
     ofDirectory dir;
-    dir.listDir("faces");
+    dir.listDir("photos");
     for (int i = 0; i < dir.size(); i++) {
         ofImage photo;
         photos.push_back(photo);
         photos.back().load(dir.getPath(i));
-        auto pixels = photos.back().getPixels();
-        for (int x = 0; x < pixels.getWidth(); x++) {
-            for (int y = 0; y < pixels.getHeight(); y++) {
-                float b = pixels.getColor(x, y).getBrightness();
-                ofColor c = ofColor(b);
-                photos.back().setColor(x, y, c);
-            }
-        }
-        photos.back().update();
-        names.push_back(dir.getName(i));
+
+        do {
+            tracker.update(photos.back());
+        } while (tracker.size() == 0);
+        measures.push_back(measureFace(tracker));
+
+        string name = dir.getName(i);
+        auto fileNameParts = ofSplitString(name, ".");
+        auto nameParts = ofSplitString(fileNameParts[0], ", ");
+        StudentName studentName;
+        studentName.lastName = nameParts[0];
+        studentName.firstName = nameParts[1];
+        names.push_back(studentName);
+
+        cout << nameParts[1] << " " << nameParts[0] << endl;
     }
+    cout << names.size() << " students loaded." << endl;
 
-    tracker.setup();
-    //    videoTracker.setup();
-    //    grabber.setDeviceID(1);
-    //    grabber.setup(640, 480);
-
-    slep.set(0, 0);
-    srep.set(0, 0);
+    tracker.setThreaded(true);
+    grabber.setDeviceID(1);
+    grabber.setup(640, 480);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
-    idx = ofMap(mouseX, 0, ofGetWidth(), 0, photos.size() - 1, true);
-    tracker.update(photos[idx]);
+//    idx = ofMap(mouseX, 0, ofGetWidth(), 0, photos.size() - 1, true);
+
+    grabber.update();
+    if (grabber.isFrameNew()) {
+        tracker.update(grabber);
+
+        if (tracker.size() > 0) {
+            compareWithFaces(tracker);
+        }
+    }
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
     ofSetColor(ofColor::white);
+    grabber.draw(300, 160);
     photos[idx].draw(0, 0);
 
-    if (tracker.size() == 0) return;
-
-    ofSetLineWidth(2);
-    tracker.drawDebug();
-    ofSetColor(ofColor::cyan);
-    ofSetLineWidth(4);
-
-    auto m = measureFace(tracker);
-
     // Debug
+    auto m = measures[idx];
     ofSetColor(ofColor::white);
     ofDrawBitmapString(
-       "eyes: " + ofToString(m.eyes, 5) + "\n" +
-       "eyebrows: " + ofToString(m.eyebrows, 5) + "\n" +
-       "noseBase: " + ofToString(m.noseBase, 5) + "\n" +
-       "mouth: " + ofToString(m.mouth, 5) + "\n" +
-       "noseBridge: " + ofToString(m.noseBridge, 5) + "\n" +
-       "lip: " + ofToString(m.lip, 5) + "\n" +
-       "jaw: " + ofToString(m.jaw, 5),
+        ofToUpper(names[idx].lastName) + ", " + names[idx].firstName + "\n" +
+            "eyes: " + ofToString(m.eyes, 5) + "\n" +
+            "eyebrows: " + ofToString(m.eyebrows, 5) + "\n" +
+            "noseBase: " + ofToString(m.noseBase, 5) + "\n" +
+            "mouth: " + ofToString(m.mouth, 5) + "\n" +
+            "noseBridge: " + ofToString(m.noseBridge, 5) + "\n" + "lip: " +
+            ofToString(m.lip, 5) + "\n" + "jaw: " + ofToString(m.jaw, 5),
         40, 40);
+
+    if (tracker.size() > 0) {
+        m = measureFace(tracker);
+        ofSetColor(ofColor::white);
+        ofDrawBitmapString("eyes: " + ofToString(m.eyes, 5) + "\n" +
+                               "eyebrows: " + ofToString(m.eyebrows, 5) + "\n" +
+                               "noseBase: " + ofToString(m.noseBase, 5) + "\n" +
+                               "mouth: " + ofToString(m.mouth, 5) + "\n" +
+                               "noseBridge: " + ofToString(m.noseBridge, 5) +
+                               "\n" + "lip: " + ofToString(m.lip, 5) + "\n" +
+                               "jaw: " + ofToString(m.jaw, 5),
+                           340, 40);
+    }
 }
 
 //--------------------------------------------------------------
