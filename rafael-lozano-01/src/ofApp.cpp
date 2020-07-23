@@ -1,11 +1,80 @@
 #include "ofApp.h"
 
-ofPoint getCenterOfFeature(ofxFaceTracker2 &tracker, ofxFaceTracker2Landmarks::Feature feature) {
-    auto points = tracker.getInstances()[0].getLandmarks().getImageFeature(feature);
-    ofPoint center;
-    for (int i = 0; i < points.size(); center += points[i++]);
-    center /= (float)points.size();
-    return center;
+FaceMeasures measureFace(ofxFaceTracker2 &tracker) {
+    auto lmks = tracker.getInstances()[0].getLandmarks();
+
+    auto leyf = lmks.getImageFeature(ofxFaceTracker2Landmarks::LEFT_EYE);
+    auto reyf = lmks.getImageFeature(ofxFaceTracker2Landmarks::RIGHT_EYE);
+    auto lebf = lmks.getImageFeature(ofxFaceTracker2Landmarks::LEFT_EYEBROW);
+    auto rebf = lmks.getImageFeature(ofxFaceTracker2Landmarks::RIGHT_EYEBROW);
+    auto nosf = lmks.getImageFeature(ofxFaceTracker2Landmarks::NOSE_BASE);
+    auto mthf = lmks.getImageFeature(ofxFaceTracker2Landmarks::OUTER_MOUTH);
+    auto ljwf = lmks.getImageFeature(ofxFaceTracker2Landmarks::LEFT_JAW);
+    auto rjwf = lmks.getImageFeature(ofxFaceTracker2Landmarks::RIGHT_JAW);
+    auto nobf = lmks.getImageFeature(ofxFaceTracker2Landmarks::NOSE_BRIDGE);
+
+    // Distance between the center of the eyes.
+    ofPoint leyc = leyf.getCentroid2D();
+    ofPoint reyc = reyf.getCentroid2D();
+    float eyes = (reyc - leyc).length();
+
+    // Distance between the left and right eyebrows.
+    ofPoint eblp = lebf.getVertices()[0];
+    auto ebvs = rebf.getVertices();
+    ofPoint ebrp = ebvs[ebvs.size() - 1];
+    float eyebrows = (ebrp - eblp).length();
+
+    // Distance between the sides of the nose base.
+    auto nosv = nosf.getVertices();
+    ofPoint nosl = nosv[0];
+    ofPoint nosr = nosv[nosv.size() - 1];
+    float noseBase = (nosr - nosl).length();
+
+    // Distance between the sides of the mouth.
+    auto mthv = mthf.getVertices();
+    ofPoint mthl = mthv[0];
+    ofPoint mthr = mthv[mthv.size() / 2.0];
+    float mouth = (mthr - mthl).length();
+
+    // Distance between the sides of the jaw tops.
+    ofPoint ljwp = ljwf.getVertices()[0];
+    auto rjwv = rjwf.getVertices();
+    ofPoint rjwp = rjwv[rjwv.size() - 1];
+    float faceWidth = (rjwp - ljwp).length();
+
+    // Distance between the top center and the bottom of the jaw.
+    ofSetColor(ofColor::green);
+    ofPoint tjwp = (ljwp + rjwp) / 2.0;
+    ofPoint bjwp = rjwv[0];
+    float faceHeight = (bjwp - tjwp).length();
+
+    // Distance between the top of the bridge and the bottom of the nose.
+    ofSetColor(ofColor::orange);
+    ofPoint tnsp = nobf.getVertices()[0];
+    ofPoint bnsp = nosv[nosv.size() / 2.0];
+    float noseBridge = (bnsp - tnsp).length();
+
+    // Distance between the bottom of the nose and the mouth.
+    ofPoint tnmp = bnsp;
+    ofPoint bnmp = mthf.getCentroid2D();
+    float lip = (tnmp - bnmp).length();
+
+    // Distance between the mouth and the jaw.
+    auto tnjp = bnmp;
+    auto bnjp = bjwp;
+    float jaw = (tnjp - bnjp).length();
+
+    // Normalize values and return.
+    FaceMeasures measures;
+    measures.eyes = eyes / faceWidth;
+    measures.eyebrows = eyebrows / faceWidth;
+    measures.noseBase = noseBase / faceWidth;
+    measures.mouth = mouth / faceWidth;
+    measures.noseBridge = noseBridge / faceHeight;
+    measures.lip = lip / faceHeight;
+    measures.jaw = jaw / faceHeight;
+
+    return measures;
 }
 
 //--------------------------------------------------------------
@@ -29,9 +98,9 @@ void ofApp::setup() {
     }
 
     tracker.setup();
-    videoTracker.setup();
-    grabber.setDeviceID(1);
-    grabber.setup(640, 480);
+    //    videoTracker.setup();
+    //    grabber.setDeviceID(1);
+    //    grabber.setup(640, 480);
 
     slep.set(0, 0);
     srep.set(0, 0);
@@ -39,82 +108,35 @@ void ofApp::setup() {
 
 //--------------------------------------------------------------
 void ofApp::update() {
-//    idx = ofMap(mouseX, 0, ofGetWidth(), 0, photos.size() - 1, true);
-    grabber.update();
-    if (grabber.isFrameNew()) {
-        tracker.update(photos[idx]);
-        videoTracker.update(grabber);
-    }
+    idx = ofMap(mouseX, 0, ofGetWidth(), 0, photos.size() - 1, true);
+    tracker.update(photos[idx]);
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
+    ofSetColor(ofColor::white);
+    photos[idx].draw(0, 0);
 
-//    ofPushMatrix();
-//    grabber.draw(500, 0);
-//    ofTranslate(500, 0);
-//    videoTracker.drawDebug();
-//    videoTracker.drawDebugPose();
-//    ofPopMatrix();
-//    photos[idx].draw(0, 50);
-//    ofSetColor(ofColor::white);
-//    ofDrawBitmapString(names[idx], 0, 20);
-//    ofTranslate(0, 50);
-//    tracker.drawDebug();
-//    tracker.drawDebugPose();
+    if (tracker.size() == 0) return;
 
-    if (videoTracker.size() > 0 && tracker.size() > 0) {
-        ofPoint lep = getCenterOfFeature(videoTracker, ofxFaceTracker2Landmarks::LEFT_EYE);
-        ofPoint rep = getCenterOfFeature(videoTracker, ofxFaceTracker2Landmarks::RIGHT_EYE);
-        slep = slep * 0.9 + lep * 0.1;
-        srep = srep * 0.9 + rep * 0.1;
+    ofSetLineWidth(2);
+    tracker.drawDebug();
+    ofSetColor(ofColor::cyan);
+    ofSetLineWidth(4);
 
-        ofPoint lep2 = getCenterOfFeature(tracker, ofxFaceTracker2Landmarks::LEFT_EYE);
-        ofPoint rep2 = getCenterOfFeature(tracker, ofxFaceTracker2Landmarks::RIGHT_EYE);
+    auto m = measureFace(tracker);
 
-        ofImage img;
-        img.allocate(grabber.getWidth(), grabber.getHeight(), OF_IMAGE_GRAYSCALE);
-        auto pixels =grabber.getPixels();
-        for (int x = 0; x < grabber.getWidth(); x++) {
-            for (int y = 0; y < grabber.getHeight(); y++) {
-                float b = pixels.getColor(x, y).getBrightness();
-                ofColor c = ofColor(b);
-                img.setColor(x, y, c);
-            }
-        }
-        img.update();
-
-        img.setAnchorPoint(slep.x, slep.y);
-        photos[idx].setAnchorPoint(lep2.x, lep2.y);
-
-        ofPushMatrix();
-        ofSetColor(255, 255, 255, 255);
-        float dist = (slep - srep).length();
-        ofPoint diff = srep - slep;
-        float angle = atan2(diff.y, diff.x);
-        float scale = 200. / dist;
-        ofTranslate(300, 300);
-        ofScale(scale, scale);
-        ofRotateZRad(-angle);
-        img.draw(0, 0);
-        ofPopMatrix();
-
-        ofPushMatrix();
-        ofSetColor(255, 255, 255, ofMap(sin(ofGetElapsedTimef() * 7), -1, 1, 255 * 0, 255 * 0.8, true));
-        dist = (lep2 -rep2).length();
-        diff = rep2 - lep2;
-        angle = atan2(diff.y, diff.x);
-        scale = 200. / dist;
-        ofTranslate(300, 300);
-        ofScale(scale, scale);
-        ofRotateZRad(-angle);
-        photos[idx].draw(0, 0);
-        ofPopMatrix();
-
-        if (ofMap(sin(ofGetElapsedTimef() * 7), -1, 1, 255 * 0, 255 * 0.75, true) < 5) {
-            idx = (int)ofRandom(0, photos.size() - 1);
-        }
-    }
+    // Debug
+    ofSetColor(ofColor::white);
+    ofDrawBitmapString(
+       "eyes: " + ofToString(m.eyes, 5) + "\n" +
+       "eyebrows: " + ofToString(m.eyebrows, 5) + "\n" +
+       "noseBase: " + ofToString(m.noseBase, 5) + "\n" +
+       "mouth: " + ofToString(m.mouth, 5) + "\n" +
+       "noseBridge: " + ofToString(m.noseBridge, 5) + "\n" +
+       "lip: " + ofToString(m.lip, 5) + "\n" +
+       "jaw: " + ofToString(m.jaw, 5),
+        40, 40);
 }
 
 //--------------------------------------------------------------
@@ -133,9 +155,7 @@ void ofApp::mouseDragged(int x, int y, int button) {}
 void ofApp::mousePressed(int x, int y, int button) {}
 
 //--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button) {
-    idx = (idx + 1) % photos.size();
-}
+void ofApp::mouseReleased(int x, int y, int button) {}
 
 //--------------------------------------------------------------
 void ofApp::mouseEntered(int x, int y) {}

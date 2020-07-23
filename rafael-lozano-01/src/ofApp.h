@@ -4,6 +4,16 @@
 #include "ofxCv.h"
 #include "ofxFaceTracker2.h"
 
+struct FaceMeasures {
+    float eyes;
+    float eyebrows;
+    float noseBase;
+    float noseBridge;
+    float mouth;
+    float lip;
+    float jaw;
+};
+
 class ofApp : public ofBaseApp {
   public:
     void setup();
