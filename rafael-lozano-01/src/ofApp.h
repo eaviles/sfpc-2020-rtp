@@ -13,11 +13,18 @@ struct FaceMeasures {
     float lip;
     float jaw;
     float faceProp;
+    float eyeWidth;
+    float eyebrowWidth;
 };
 
 struct StudentName {
     string firstName;
     string lastName;
+};
+
+struct EyesLocation {
+    ofPoint left;
+    ofPoint right;
 };
 
 class ofApp : public ofBaseApp {
@@ -44,8 +51,10 @@ class ofApp : public ofBaseApp {
     vector<ofImage> photos;
     vector<StudentName> names;
     vector<FaceMeasures> measures;
+    vector<EyesLocation> eyes;
 
     ofxFaceTracker2 tracker;
     ofVideoGrabber grabber;
     int idx;
+    float lastCheck = 0.0;
 };

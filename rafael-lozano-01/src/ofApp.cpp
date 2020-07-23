@@ -14,15 +14,32 @@ FaceMeasures ofApp::measureFace(ofxFaceTracker2 &tracker) {
     auto rjwf = lmks.getImageFeature(ofxFaceTracker2Landmarks::RIGHT_JAW);
     auto nobf = lmks.getImageFeature(ofxFaceTracker2Landmarks::NOSE_BRIDGE);
 
+    // Get the average eye width.
+    auto leyv = leyf.getVertices();
+    ofPoint llep = leyv[0];
+    ofPoint lrep = leyv[leyv.size() / 2];
+    auto reyv = reyf.getVertices();
+    ofPoint rlep = reyv[0];
+    ofPoint rrep = reyv[reyv.size() / 2];
+    float eyeWidth = ((lrep - llep).length() + (rrep - rlep).length()) / 2;
+
+    // Get the average eyebrow width.
+    auto lebv = lebf.getVertices();
+    llep = lebv[0];
+    lrep = lebv[lebv.size() - 1];
+    auto rebv = rebf.getVertices();
+    rlep = rebv[0];
+    rrep = rebv[rebv.size() - 1];
+    float eyebrowWidth = ((lrep - llep).length() + (rrep - rlep).length()) / 2;
+
     // Distance between the center of the eyes.
     ofPoint leyc = leyf.getCentroid2D();
     ofPoint reyc = reyf.getCentroid2D();
     float eyes = (reyc - leyc).length();
 
     // Distance between the left and right eyebrows.
-    ofPoint eblp = lebf.getVertices()[0];
-    auto ebvs = rebf.getVertices();
-    ofPoint ebrp = ebvs[ebvs.size() - 1];
+    ofPoint eblp = lebv[0];
+    ofPoint ebrp = rebv[rebv.size() - 1];
     float eyebrows = (ebrp - eblp).length();
 
     // Distance between the sides of the nose base.
@@ -34,7 +51,7 @@ FaceMeasures ofApp::measureFace(ofxFaceTracker2 &tracker) {
     // Distance between the sides of the mouth.
     auto mthv = mthf.getVertices();
     ofPoint mthl = mthv[0];
-    ofPoint mthr = mthv[mthv.size() / 2.0];
+    ofPoint mthr = mthv[mthv.size() / 2];
     float mouth = (mthr - mthl).length();
 
     // Distance between the sides of the jaw tops.
@@ -44,13 +61,13 @@ FaceMeasures ofApp::measureFace(ofxFaceTracker2 &tracker) {
     float faceWidth = (rjwp - ljwp).length();
 
     // Distance between the top center and the bottom of the jaw.
-    ofPoint tjwp = (ljwp + rjwp) / 2.0;
+    ofPoint tjwp = (ljwp + rjwp) / 2;
     ofPoint bjwp = rjwv[0];
     float faceHeight = (bjwp - tjwp).length();
 
     // Distance between the top of the bridge and the bottom of the nose.
     ofPoint tnsp = nobf.getVertices()[0];
-    ofPoint bnsp = nosv[nosv.size() / 2.0];
+    ofPoint bnsp = nosv[nosv.size() / 2];
     float noseBridge = (bnsp - tnsp).length();
 
     // Distance between the bottom of the nose and the mouth.
@@ -67,6 +84,8 @@ FaceMeasures ofApp::measureFace(ofxFaceTracker2 &tracker) {
     FaceMeasures measures;
     measures.eyes = eyes / faceWidth;
     measures.eyebrows = eyebrows / faceWidth;
+    measures.eyeWidth = eyeWidth / faceWidth;
+    measures.eyebrowWidth = eyebrowWidth / faceWidth;
     measures.noseBase = noseBase / faceWidth;
     measures.mouth = mouth / faceWidth;
     measures.noseBridge = noseBridge / faceHeight;
@@ -86,15 +105,17 @@ int ofApp::compareWithFaces(ofxFaceTracker2 &tracker) {
 
     for (int i = 0; i < measures.size(); i++) {
         auto mi = measures[i];
-        float d1 = 1.0 - ofDist(m.eyes, 0, mi.eyes, 0);
-        float d2 = 1.0 - ofDist(m.eyebrows, 0, mi.eyebrows, 0);
-        float d3 = 1.0 - ofDist(m.noseBase, 0, mi.noseBase, 0);
-        float d4 = 1.0 - ofDist(m.noseBridge, 0, mi.noseBridge, 0);
-        float d5 = 1.0 - ofDist(m.mouth, 0, mi.mouth, 0);
-        float d6 = 1.0 - ofDist(m.lip, 0, mi.lip, 0);
-        float d7 = 1.0 - ofDist(m.jaw, 0, mi.jaw, 0);
-        float d8 = 1.0 - ofDist(m.faceProp, 0, mi.faceProp, 0);
-        float conf = d1 * d2 * d3 * d4 * d5 * d6 * d7;
+        float d0 = 1.0 - ofDist(m.eyes, 0, mi.eyes, 0);
+        float d1 = 1.0 - ofDist(m.eyebrows, 0, mi.eyebrows, 0);
+        float d2 = 1.0 - ofDist(m.noseBase, 0, mi.noseBase, 0);
+        float d3 = 1.0 - ofDist(m.noseBridge, 0, mi.noseBridge, 0);
+        float d4 = 1.0 - ofDist(m.mouth, 0, mi.mouth, 0);
+        float d5 = 1.0 - ofDist(m.lip, 0, mi.lip, 0);
+        float d6 = 1.0 - ofDist(m.jaw, 0, mi.jaw, 0);
+        float d7 = 1.0 - ofDist(m.faceProp, 0, mi.faceProp, 0);
+        float d8 = 1.0 - ofDist(m.eyeWidth, 0, mi.eyeWidth, 0);
+        float d9 = 1.0 - ofDist(m.eyebrowWidth, 0, mi.eyebrowWidth, 0);
+        float conf = d0 * d1 * d2 * d3 * d4 * d5 * d6 * d7 * d8 * d9;
         if (conf > max) {
             max = conf;
             maxIdx = i;
@@ -107,6 +128,8 @@ int ofApp::compareWithFaces(ofxFaceTracker2 &tracker) {
 
 //--------------------------------------------------------------
 void ofApp::setup() {
+    ofSetFrameRate(60);
+
     tracker.setup();
     tracker.setThreaded(false);
 
@@ -117,10 +140,18 @@ void ofApp::setup() {
         photos.push_back(photo);
         photos.back().load(dir.getPath(i));
 
-        do {
-            tracker.update(photos.back());
-        } while (tracker.size() == 0);
+        tracker.update(photos.back());
         measures.push_back(measureFace(tracker));
+
+        EyesLocation eyesLocation;
+        eyes.push_back(eyesLocation);
+        auto lmks = tracker.getInstances()[0].getLandmarks();
+        auto lEye = lmks.getImageFeature(ofxFaceTracker2Landmarks::LEFT_EYE);
+        ofPoint lEyeP = lEye.getCentroid2D();
+        auto rEye = lmks.getImageFeature(ofxFaceTracker2Landmarks::RIGHT_EYE);
+        ofPoint rEyeP = rEye.getCentroid2D();
+        eyes.back().left = lEyeP;
+        eyes.back().right = rEyeP;
 
         string name = dir.getName(i);
         auto fileNameParts = ofSplitString(name, ".");
@@ -141,15 +172,22 @@ void ofApp::setup() {
 
 //--------------------------------------------------------------
 void ofApp::update() {
-//    idx = ofMap(mouseX, 0, ofGetWidth(), 0, photos.size() - 1, true);
+    //    idx = ofMap(mouseX, 0, ofGetWidth(), 0, photos.size() - 1, true);
 
     grabber.update();
     if (grabber.isFrameNew()) {
         tracker.update(grabber);
 
-        if (tracker.size() > 0) {
-            compareWithFaces(tracker);
+        if (ofGetElapsedTimef() - lastCheck > 1) {
+            lastCheck = ofGetElapsedTimef();
+            if (tracker.size() > 0) {
+                cout << "checking!" << endl;
+                compareWithFaces(tracker);
+            } else {
+                idx = ofRandom(0, photos.size() - 1);
+            }
         }
+
     }
 }
 
@@ -158,6 +196,7 @@ void ofApp::draw() {
     ofSetColor(ofColor::white);
     grabber.draw(300, 160);
     photos[idx].draw(0, 0);
+    tracker.drawDebug(300, 160);
 
     // Debug
     auto m = measures[idx];
@@ -175,7 +214,8 @@ void ofApp::draw() {
     if (tracker.size() > 0) {
         m = measureFace(tracker);
         ofSetColor(ofColor::white);
-        ofDrawBitmapString("eyes: " + ofToString(m.eyes, 5) + "\n" +
+        ofDrawBitmapString(ofToString(ofGetElapsedTimef(), 3) + "\n" +
+                           "eyes: " + ofToString(m.eyes, 5) + "\n" +
                                "eyebrows: " + ofToString(m.eyebrows, 5) + "\n" +
                                "noseBase: " + ofToString(m.noseBase, 5) + "\n" +
                                "mouth: " + ofToString(m.mouth, 5) + "\n" +
