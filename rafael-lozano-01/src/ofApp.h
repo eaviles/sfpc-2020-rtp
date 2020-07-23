@@ -57,7 +57,7 @@ class ofApp : public ofBaseApp {
     vector<FaceMeasures> measures;
     vector<EyesLocation> eyes;
     vector<ofImage> images;
-    ofImage imageComp;
+    ofImage cameraImage;
 
     ofxFaceTracker2 tracker;
     ofVideoGrabber grabber;
@@ -66,6 +66,9 @@ class ofApp : public ofBaseApp {
 
     int currentPhoto;
     int previousPhoto;
+    float confidence;
+    ofPoint slep;
+    ofPoint srep;
 
     ofTrueTypeFont font1;
     ofTrueTypeFont font2;
