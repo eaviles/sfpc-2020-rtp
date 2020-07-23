@@ -189,8 +189,9 @@ void ofApp::setup() {
     tracker.setup();
     grabber.setDeviceID(1);
     grabber.setup(640, 480);
-    slep.set(0, 0);
-    srep.set(0, 0);
+
+    slep.set(300.0, 232.0);
+    srep.set(383.0, 232.0);
 }
 
 //--------------------------------------------------------------
@@ -201,17 +202,15 @@ void ofApp::update() {
 
     grabber.update();
     if (grabber.isFrameNew()) {
-        
         tracker.update(grabber);
         if (tracker.size() == 1) {
-
             auto lmk = tracker.getInstances()[0].getLandmarks();
             auto lef = lmk.getImageFeature(ofxFaceTracker2Landmarks::LEFT_EYE);
             auto ref = lmk.getImageFeature(ofxFaceTracker2Landmarks::RIGHT_EYE);
             ofPoint lep = lef.getCentroid2D();
             ofPoint rep = ref.getCentroid2D();
-            slep = slep * 0.9 + lep * 0.1;
-            srep = srep * 0.9 + rep * 0.1;
+            slep = slep * 0.8 + lep * 0.2;
+            srep = srep * 0.8 + rep * 0.2;
 
             ofFbo fbo;
             fbo.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
@@ -219,20 +218,21 @@ void ofApp::update() {
             ofClear(170, 170, 170, 0);
             cameraImage.setFromPixels(grabber.getPixels());
             for (int x = 0; x < cameraImage.getWidth(); x++) {
-                for (int y = 0 ; y < cameraImage.getHeight(); y++) {
-                    float b = cameraImage.getColor(x,y).getBrightness();
+                for (int y = 0; y < cameraImage.getHeight(); y++) {
+                    float b = cameraImage.getColor(x, y).getBrightness();
+                    b = ofClamp(b + 30, 0, 255);
                     cameraImage.setColor(x, y, ofColor(b));
                 }
             }
             cameraImage.update();
-            cameraImage.setAnchorPoint(lep.x, lep.y);
+            cameraImage.setAnchorPoint(slep.x, slep.y);
             float dist = (slep - srep).length();
             ofPoint diff = srep - slep;
             float angle = atan2(diff.y, diff.x);
             float scale = 150.0 / dist;
             ofTranslate(310, 390);
             ofScale(scale, scale);
-            ofRotateZDeg(-angle);
+            ofRotateZRad(-angle);
             ofSetColor(ofColor::white);
             cameraImage.draw(0, 0);
             fbo.end();
@@ -243,7 +243,7 @@ void ofApp::update() {
             cameraImage.setFromPixels(pixels);
             cameraImage.update();
 
-            if (ofGetElapsedTimef() - lastCheck > 3.0) {
+            if (ofGetElapsedTimef() - lastCheck > 5.0) {
                 lastCheck = ofGetElapsedTimef();
                 compareWithFaces(tracker);
             }
@@ -257,9 +257,10 @@ void ofApp::update() {
         confidence = 0.0;
     }
 
-    if (confidence == 0.0 && ofGetFrameNum() % (int)(FRAME_RATE * PHOTO_DELAY) == 0) {
+    if (confidence == 0.0 &&
+        ofGetFrameNum() % (int)(FRAME_RATE * PHOTO_DELAY) == 0) {
         previousPhoto = currentPhoto;
-        currentPhoto = (currentPhoto + 1) % photos.size();
+        currentPhoto = ofRandom(0, photos.size() - 1);
         prepareFbo(currentPhoto);
     }
 }
@@ -305,8 +306,13 @@ void ofApp::draw() {
 
     if (confidence > 0.0) {
         ofSetColor(ofColor::white);
-        cameraImage.draw(0,0);
-//        tracker.drawDebug(0, 0);
+        prepareFbo(currentPhoto);
+        shader.begin();
+        shader.setUniform1f("time", ofGetElapsedTimef());
+        shader.setUniformTexture("camera", cameraImage, 0);
+        shader.setUniformTexture("match", images[currentPhoto], 1);
+        ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
+        shader.end();
     } else {
         int framesThreshold = FRAME_RATE * PHOTO_DELAY;
         int relativeFrameNum = ofGetFrameNum() % framesThreshold;
@@ -335,26 +341,13 @@ void ofApp::draw() {
     box = font2.getStringBoundingBox(status, 0, 0);
     font2.drawString(status, (ofGetWidth() - box.getWidth()) / 2.0, y);
 
-    y += font2.getLineHeight() * 1.1;
-    string result = "Nivel de confianza: " + ofToString(confidence, 2) + "%";
-    box = font2.getStringBoundingBox(result, 0, 0);
-    font2.drawString(result, (ofGetWidth() - box.getWidth()) / 2.0, y);
-
-    //    shader.begin();
-    //    shader.setUniform1f("time", ofGetElapsedTimef());
-    //    //    shader.setUniform2f("mouse", mouseX, mouseY);
-    //    //    shader.setUniform2f("resolution", ofGetWidth(), ofGetHeight());
-    //    shader.setUniformTexture("img0", images[drawQueue[0]], 0);
-    //    shader.setUniformTexture("img1", images[drawQueue[1]], 1);
-    ////    shader.setUniformTexture("img2", images[drawQueue[2]], 2);
-    ////    shader.setUniformTexture("img3", images[drawQueue[3]], 3);
-    ////    shader.setUniformTexture("img4", images[drawQueue[4]], 4);
-    //    ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
-    //    shader.end();
-
-    //    ofSetColor(ofColor::black);
-    //    ofDrawBitmapString(ofToString(ofGetFrameRate()) + "\n" + "alpha: " +
-    //    ofToString(alpha, 2), 40, 40);
+    if (confidence > 0.0) {
+        y += font2.getLineHeight() * 1.1;
+        string result =
+            "Nivel de confianza: " + ofToString(confidence, 0) + "%";
+        box = font2.getStringBoundingBox(result, 0, 0);
+        font2.drawString(result, (ofGetWidth() - box.getWidth()) / 2.0, y);
+    }
 }
 
 //--------------------------------------------------------------

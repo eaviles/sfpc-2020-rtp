@@ -5,7 +5,7 @@
 #include "ofxFaceTracker2.h"
 
 #define FRAME_RATE 60.0
-#define PHOTO_DELAY 2.0
+#define PHOTO_DELAY 3.0
 
 struct FaceMeasures {
     float eyes;

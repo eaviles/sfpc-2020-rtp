@@ -1,10 +1,7 @@
 
 uniform float time;
-uniform sampler2DRect img0;
-uniform sampler2DRect img1;
-// uniform sampler2DRect img2;
-// uniform sampler2DRect img3;
-// uniform sampler2DRect img4;
+uniform sampler2DRect camera;
+uniform sampler2DRect match;
 
 float map(float value, float min1, float max1, float min2, float max2) {
     return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
@@ -95,18 +92,16 @@ float snoise(vec3 v) {
 
 void main() {
     vec2 pos = gl_FragCoord.xy;
-    pos.y = 768.0 - pos.y;
-    vec3 color = texture2DRect(img0, pos).rgb;
+    pos.y = 1024.0 - pos.y;
+    vec3 c1 = texture2DRect(match, pos).rgb;
+    vec3 c2 = texture2DRect(camera, pos).rgb;
 
-    float v = map(snoise(vec3(pos.x * 0.0025, pos.y * 0.0025, time * 0.2)),
-                  -1.0, 1.0, 0.0, 2.0);
-    int idx = int(v);
+    float noise = snoise(vec3(pos.x * 0.002, pos.y * 0.002, time * 0.2));
+    noise = clamp(map(noise * 20.0, -1.0, 1.0, 0.0, 1.0), 0.0, 1.0);
+    float transition = map(sin(time * 1.0), -1.0, 1.0, 0.0, 0.25);
 
-    if (idx == 0) color = texture2DRect(img0, pos).rgb;
-    if (idx == 1) color = texture2DRect(img1, pos).rgb;
-    //    if (idx == 2) color = texture2DRect(img2, pos).rgb;
-    //    if (idx == 3) color = texture2DRect(img1, pos).rgb;
-    //    if (idx == 4) color = texture2DRect(img0, pos).rgb;
+    vec3 c = c1 * (1.0 - noise) + c2 * noise;
+    c = c * (1.0 - transition) + c1 * transition;
 
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(c, 1.0);
 }
