@@ -178,8 +178,7 @@ void ofApp::setup() {
 
 //--------------------------------------------------------------
 void ofApp::update() {
-
-    if (ofGetFrameNum() % 60) shader.load("", "shader.frag");
+    if (ofGetFrameNum() % 180) shader.load("", "shader.frag");
 
     //    idx = ofMap(mouseX, 0, ofGetWidth(), 0, photos.size() - 1, true);
 
@@ -197,15 +196,13 @@ void ofApp::update() {
         prepareFbo(idx);
 
         drawQueue.push_back(idx);
-        while (drawQueue.size() < 5) {
+        while (drawQueue.size() < 3) {
             drawQueue.push_back(idx);
         }
-        if (drawQueue.size() > 5) {
+        if (drawQueue.size() > 3) {
             drawQueue.erase(drawQueue.begin());
         }
         //            }
-
-
     }
 }
 
@@ -252,29 +249,29 @@ void ofApp::draw() {
 
     shader.begin();
     shader.setUniform1f("time", ofGetElapsedTimef());
-//    shader.setUniform2f("mouse", mouseX, mouseY);
-//    shader.setUniform2f("resolution", ofGetWidth(), ofGetHeight());
+    //    shader.setUniform2f("mouse", mouseX, mouseY);
+    //    shader.setUniform2f("resolution", ofGetWidth(), ofGetHeight());
     shader.setUniformTexture("img0", images[drawQueue[0]], 0);
     shader.setUniformTexture("img1", images[drawQueue[1]], 1);
-    shader.setUniformTexture("img2", images[drawQueue[2]], 2);
-    shader.setUniformTexture("img3", images[drawQueue[3]], 3);
-    shader.setUniformTexture("img4", images[drawQueue[4]], 4);
+//    shader.setUniformTexture("img2", images[drawQueue[2]], 2);
+//    shader.setUniformTexture("img3", images[drawQueue[3]], 3);
+//    shader.setUniformTexture("img4", images[drawQueue[4]], 4);
     ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
     shader.end();
 
-
-
     ofSetColor(ofColor::black);
     ofDrawBitmapString(ofToString(ofGetFrameRate()), 40, 40);
-//    string labels = "";
-//    for (int i = 0; i < drawQueue.size(); i++) {
-//        labels = ofToString(fboPixels[drawQueue[i]].size()) + " " + labels;
-//    }
-//    ofDrawBitmapString(
-//        ofToUpper(names[idx].lastName) + ", " + names[idx].firstName + "\n" +
-//                       labels
-//            ,
-//        40, 40);
+    //    string labels = "";
+    //    for (int i = 0; i < drawQueue.size(); i++) {
+    //        labels = ofToString(fboPixels[drawQueue[i]].size()) + " " +
+    //        labels;
+    //    }
+    //    ofDrawBitmapString(
+    //        ofToUpper(names[idx].lastName) + ", " + names[idx].firstName +
+    //        "\n" +
+    //                       labels
+    //            ,
+    //        40, 40);
 }
 
 //--------------------------------------------------------------
