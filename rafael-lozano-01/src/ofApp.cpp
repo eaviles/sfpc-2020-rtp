@@ -130,8 +130,8 @@ int ofApp::compareWithFaces(ofxFaceTracker2 &tracker) {
 void ofApp::setup() {
     ofSetFrameRate(60);
 
-    tracker.setup();
     tracker.setThreaded(false);
+    tracker.setup();
 
     ofDirectory dir;
     dir.listDir("photos");
@@ -161,20 +161,26 @@ void ofApp::setup() {
         studentName.firstName = nameParts[1];
         names.push_back(studentName);
 
-        ofFbo fbo;
-        fbos.push_back(fbo);
+        ofImage img;
+        images.push_back(img);
 
         cout << nameParts[1] << " " << nameParts[0] << endl;
     }
     cout << names.size() << " students loaded." << endl;
 
+    imageComp.allocate(ofGetWidth(), ofGetHeight(), OF_IMAGE_COLOR);
+
     tracker.setThreaded(true);
+    shader.load("", "shader.frag");
     //    grabber.setDeviceID(1);
     //    grabber.setup(640, 480);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
+
+    if (ofGetFrameNum() % 60) shader.load("", "shader.frag");
+
     //    idx = ofMap(mouseX, 0, ofGetWidth(), 0, photos.size() - 1, true);
 
     //    grabber.update();
@@ -188,19 +194,29 @@ void ofApp::update() {
         //                compareWithFaces(tracker);
         //            } else {
         idx = (idx + 1) % photos.size();
-        //            }
-    }
+        prepareFbo(idx);
 
-    //    }
+        drawQueue.push_back(idx);
+        while (drawQueue.size() < 5) {
+            drawQueue.push_back(idx);
+        }
+        if (drawQueue.size() > 5) {
+            drawQueue.erase(drawQueue.begin());
+        }
+        //            }
+
+
+    }
 }
 
 //--------------------------------------------------------------
 void ofApp::prepareFbo(int fboIdx) {
-    if (fbos[fboIdx].isAllocated()) return;
+    if (images[fboIdx].isAllocated()) return;
 
-    fbos[fboIdx].allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
-    fbos[fboIdx].begin();
-    ofClear(170, 170, 170, 255);
+    ofFbo fbo;
+    fbo.allocate(ofGetWidth(), ofGetHeight(), GL_RGB);
+    fbo.begin();
+    ofClear(170, 170, 170);
     auto eyesLocation = eyes[fboIdx];
     ofImage photo = photos[fboIdx];
     for (int x = 0; x < photo.getWidth(); x++) {
@@ -216,11 +232,17 @@ void ofApp::prepareFbo(int fboIdx) {
     ofPoint diff = eyesLocation.right - eyesLocation.left;
     float angle = atan2(diff.y, diff.x);
     float scale = 150.0 / dist;
-    ofTranslate(420, 300);
+    ofTranslate(420, 320);
     ofScale(scale, scale);
     ofRotateZRad(-angle);
+    ofSetColor(ofColor::white);
     photo.draw(0, 0);
-    fbos[idx].end();
+    fbo.end();
+
+    ofPixels pixels;
+    fbo.readToPixels(pixels);
+    images[fboIdx].setFromPixels(pixels);
+    images[fboIdx].update();
 }
 
 //--------------------------------------------------------------
@@ -228,24 +250,31 @@ void ofApp::draw() {
     ofBackground(ofColor::white);
     ofSetColor(ofColor::white);
 
-    prepareFbo(idx);
+    shader.begin();
+    shader.setUniform1f("time", ofGetElapsedTimef());
+//    shader.setUniform2f("mouse", mouseX, mouseY);
+//    shader.setUniform2f("resolution", ofGetWidth(), ofGetHeight());
+    shader.setUniformTexture("img0", images[drawQueue[0]], 0);
+    shader.setUniformTexture("img1", images[drawQueue[1]], 1);
+    shader.setUniformTexture("img2", images[drawQueue[2]], 2);
+    shader.setUniformTexture("img3", images[drawQueue[3]], 3);
+    shader.setUniformTexture("img4", images[drawQueue[4]], 4);
+    ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
+    shader.end();
 
-    //    grabber.draw(300, 160);
-    fbos[idx].draw(0, 0);
-    //    tracker.drawDebug(300, 160);
 
-    // Debug
-    auto m = measures[idx];
-    ofSetColor(ofColor::white);
-    ofDrawBitmapString(
-        ofToUpper(names[idx].lastName) + ", " + names[idx].firstName + "\n" +
-            "eyes: " + ofToString(m.eyes, 5) + "\n" +
-            "eyebrows: " + ofToString(m.eyebrows, 5) + "\n" +
-            "noseBase: " + ofToString(m.noseBase, 5) + "\n" +
-            "mouth: " + ofToString(m.mouth, 5) + "\n" +
-            "noseBridge: " + ofToString(m.noseBridge, 5) + "\n" + "lip: " +
-            ofToString(m.lip, 5) + "\n" + "jaw: " + ofToString(m.jaw, 5),
-        40, 40);
+
+    ofSetColor(ofColor::black);
+    ofDrawBitmapString(ofToString(ofGetFrameRate()), 40, 40);
+//    string labels = "";
+//    for (int i = 0; i < drawQueue.size(); i++) {
+//        labels = ofToString(fboPixels[drawQueue[i]].size()) + " " + labels;
+//    }
+//    ofDrawBitmapString(
+//        ofToUpper(names[idx].lastName) + ", " + names[idx].firstName + "\n" +
+//                       labels
+//            ,
+//        40, 40);
 }
 
 //--------------------------------------------------------------

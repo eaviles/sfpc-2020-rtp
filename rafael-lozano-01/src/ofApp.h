@@ -53,10 +53,13 @@ class ofApp : public ofBaseApp {
     vector<StudentName> names;
     vector<FaceMeasures> measures;
     vector<EyesLocation> eyes;
-    vector<ofFbo> fbos;
+    vector<ofImage> images;
+    vector<int> drawQueue;
+    ofImage imageComp;
 
     ofxFaceTracker2 tracker;
     ofVideoGrabber grabber;
     int idx;
     float lastCheck = 0.0;
+    ofShader shader;
 };
