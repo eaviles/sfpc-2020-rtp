@@ -4,6 +4,9 @@
 #include "ofxCv.h"
 #include "ofxFaceTracker2.h"
 
+#define FRAME_RATE 60.0
+#define PHOTO_DELAY 2.0
+
 struct FaceMeasures {
     float eyes;
     float eyebrows;
@@ -54,12 +57,16 @@ class ofApp : public ofBaseApp {
     vector<FaceMeasures> measures;
     vector<EyesLocation> eyes;
     vector<ofImage> images;
-    vector<int> drawQueue;
     ofImage imageComp;
 
     ofxFaceTracker2 tracker;
     ofVideoGrabber grabber;
-    int idx;
     float lastCheck = 0.0;
     ofShader shader;
+
+    int currentPhoto;
+    int previousPhoto;
+
+    ofTrueTypeFont font1;
+    ofTrueTypeFont font2;
 };

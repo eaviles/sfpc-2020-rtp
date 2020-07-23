@@ -123,12 +123,15 @@ int ofApp::compareWithFaces(ofxFaceTracker2 &tracker) {
     }
 
     cout << max * 100 << "%" << endl;
-    idx = maxIdx;
+    currentPhoto = maxIdx;
 }
 
 //--------------------------------------------------------------
 void ofApp::setup() {
-    ofSetFrameRate(60);
+    ofEnableAntiAliasing();
+    ofEnableAlphaBlending();
+    ofEnableSmoothing();
+    ofSetFrameRate(FRAME_RATE);
 
     tracker.setThreaded(false);
     tracker.setup();
@@ -171,7 +174,18 @@ void ofApp::setup() {
     imageComp.allocate(ofGetWidth(), ofGetHeight(), OF_IMAGE_COLOR);
 
     tracker.setThreaded(true);
-    shader.load("", "shader.frag");
+    currentPhoto = 0;
+    previousPhoto = 0;
+
+    ofTrueTypeFontSettings settings("Lato-Bold.ttf", 40);
+    settings.antialiased = true;
+    font1.load(settings);
+
+    settings = ofTrueTypeFontSettings("Lato-Regular.ttf", 24);
+    settings.antialiased = true;
+    font2.load(settings);
+
+//    shader.load("", "shader.frag");
     //    grabber.setDeviceID(1);
     //    grabber.setup(640, 480);
 }
@@ -180,29 +194,11 @@ void ofApp::setup() {
 void ofApp::update() {
     if (ofGetFrameNum() % 180) shader.load("", "shader.frag");
 
-    //    idx = ofMap(mouseX, 0, ofGetWidth(), 0, photos.size() - 1, true);
-
-    //    grabber.update();
-    //    if (grabber.isFrameNew()) {
-    //        tracker.update(grabber);
-
-    if (ofGetElapsedTimef() - lastCheck > 1) {
+    if (ofGetFrameNum() % (int)(FRAME_RATE * PHOTO_DELAY) == 0) {
         lastCheck = ofGetElapsedTimef();
-        //            if (tracker.size() > 0) {
-        //                cout << "checking!" << endl;
-        //                compareWithFaces(tracker);
-        //            } else {
-        idx = (idx + 1) % photos.size();
-        prepareFbo(idx);
-
-        drawQueue.push_back(idx);
-        while (drawQueue.size() < 3) {
-            drawQueue.push_back(idx);
-        }
-        if (drawQueue.size() > 3) {
-            drawQueue.erase(drawQueue.begin());
-        }
-        //            }
+        previousPhoto = currentPhoto;
+        currentPhoto = (currentPhoto + 1) % photos.size();
+        prepareFbo(currentPhoto);
     }
 }
 
@@ -211,9 +207,9 @@ void ofApp::prepareFbo(int fboIdx) {
     if (images[fboIdx].isAllocated()) return;
 
     ofFbo fbo;
-    fbo.allocate(ofGetWidth(), ofGetHeight(), GL_RGB);
+    fbo.allocate(ofGetWidth(), ofGetHeight(), GL_RGBA);
     fbo.begin();
-    ofClear(170, 170, 170);
+    ofClear(170, 170, 170, 0);
     auto eyesLocation = eyes[fboIdx];
     ofImage photo = photos[fboIdx];
     for (int x = 0; x < photo.getWidth(); x++) {
@@ -229,7 +225,7 @@ void ofApp::prepareFbo(int fboIdx) {
     ofPoint diff = eyesLocation.right - eyesLocation.left;
     float angle = atan2(diff.y, diff.x);
     float scale = 150.0 / dist;
-    ofTranslate(420, 320);
+    ofTranslate(310, 390);
     ofScale(scale, scale);
     ofRotateZRad(-angle);
     ofSetColor(ofColor::white);
@@ -244,34 +240,56 @@ void ofApp::prepareFbo(int fboIdx) {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    ofBackground(ofColor::white);
-    ofSetColor(ofColor::white);
+    ofBackground(170, 170, 170);
 
-    shader.begin();
-    shader.setUniform1f("time", ofGetElapsedTimef());
-    //    shader.setUniform2f("mouse", mouseX, mouseY);
-    //    shader.setUniform2f("resolution", ofGetWidth(), ofGetHeight());
-    shader.setUniformTexture("img0", images[drawQueue[0]], 0);
-    shader.setUniformTexture("img1", images[drawQueue[1]], 1);
-//    shader.setUniformTexture("img2", images[drawQueue[2]], 2);
-//    shader.setUniformTexture("img3", images[drawQueue[3]], 3);
-//    shader.setUniformTexture("img4", images[drawQueue[4]], 4);
-    ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
-    shader.end();
+    int framesThreshold = FRAME_RATE * PHOTO_DELAY;
+    int relativeFrameNum = ofGetFrameNum() % framesThreshold;
+    float alpha = ofMap(relativeFrameNum, 0, framesThreshold, 0, 255, true);
 
-    ofSetColor(ofColor::black);
-    ofDrawBitmapString(ofToString(ofGetFrameRate()), 40, 40);
-    //    string labels = "";
-    //    for (int i = 0; i < drawQueue.size(); i++) {
-    //        labels = ofToString(fboPixels[drawQueue[i]].size()) + " " +
-    //        labels;
-    //    }
-    //    ofDrawBitmapString(
-    //        ofToUpper(names[idx].lastName) + ", " + names[idx].firstName +
-    //        "\n" +
-    //                       labels
-    //            ,
-    //        40, 40);
+    ofSetColor(255, 255, 255, 255 - alpha);
+    prepareFbo(previousPhoto);
+    images[previousPhoto].draw(0,0);
+
+    ofSetColor(255, 255, 255, alpha);
+    prepareFbo(currentPhoto);
+    images[currentPhoto].draw(0,0);
+
+    ofSetColor(40);
+    auto name = names[currentPhoto];
+    auto box = font1.getStringBoundingBox(name.firstName, 0, 0);
+    float y = 790;
+    font1.drawString(name.firstName, (ofGetWidth() - box.getWidth()) / 2.0, y);
+    box = font1.getStringBoundingBox(name.lastName, 0, 0);
+    y += font1.getLineHeight() * 0.9;
+    font1.drawString(name.lastName, (ofGetWidth() - box.getWidth()) / 2.0, y);
+
+    y += font1.getLineHeight() * 0.9;
+    string status = "Estudiante no encontrado";
+    box = font2.getStringBoundingBox(status, 0, 0);
+    font2.drawString(status, (ofGetWidth() - box.getWidth()) / 2.0, y);
+
+    y += font2.getLineHeight() * 1.1;
+    string result = "Nivel de confianza: 0%";
+    box = font2.getStringBoundingBox(result, 0, 0);
+    font2.drawString(result, (ofGetWidth() - box.getWidth()) / 2.0, y);
+
+    
+
+
+//    shader.begin();
+//    shader.setUniform1f("time", ofGetElapsedTimef());
+//    //    shader.setUniform2f("mouse", mouseX, mouseY);
+//    //    shader.setUniform2f("resolution", ofGetWidth(), ofGetHeight());
+//    shader.setUniformTexture("img0", images[drawQueue[0]], 0);
+//    shader.setUniformTexture("img1", images[drawQueue[1]], 1);
+////    shader.setUniformTexture("img2", images[drawQueue[2]], 2);
+////    shader.setUniformTexture("img3", images[drawQueue[3]], 3);
+////    shader.setUniformTexture("img4", images[drawQueue[4]], 4);
+//    ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
+//    shader.end();
+
+//    ofSetColor(ofColor::black);
+//    ofDrawBitmapString(ofToString(ofGetFrameRate()) + "\n" + "alpha: " + ofToString(alpha, 2), 40, 40);
 }
 
 //--------------------------------------------------------------
