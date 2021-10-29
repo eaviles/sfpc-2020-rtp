@@ -99,7 +99,7 @@ void ofApp::keyPressed(int key) {
     if (key == 's' || key == 'S') {
         ofImage image;
         image.grabScreen(0, 0, 1024, 1024);
-        image.saveImage("output.jpg");
+        image.save("output-" + ofGetTimestampString() + ".jpg");
     }
 }
 

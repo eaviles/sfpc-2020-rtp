@@ -10,7 +10,7 @@ This repository contains my sketches and homework developed for the class.
   <tr>
     <td>
       <a href="vera-molnar-01">
-        <img src="vera-molnar-01/docs/vera-molnar-01.png" width="256" /><br />
+        <img src="vera-molnar-01/docs/demo.gif" width="256" /><br />
         vera-molnar-01
       </a>
     </td>
