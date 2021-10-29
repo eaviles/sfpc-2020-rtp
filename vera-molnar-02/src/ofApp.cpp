@@ -379,12 +379,18 @@ void ofApp::draw() {
 void ofApp::keyPressed(int key) {}
 
 //--------------------------------------------------------------
-void ofApp::keyReleased(int key) {}
+void ofApp::keyReleased(int key) {
+    if (key == 's' || key == 'S') {
+        ofImage image;
+        image.grabScreen(0, 0, 1024, 1024);
+        image.save("output-" + ofGetTimestampString() + ".jpg");
+    }
+}
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {}
 
-//--------------------------------------------------------------
+//---ss-----------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button) {}
 
 //--------------------------------------------------------------

@@ -16,7 +16,7 @@ This repository contains my sketches and homework developed for the class.
     </td>
     <td>
       <a href="vera-molnar-02">
-        <img src="vera-molnar-02/docs/vera-molnar-02.png" width="512" /><br />
+        <img src="vera-molnar-02/docs/demo.gif" width="512" /><br />
         vera-molnar-02
       </a>
     </td>
