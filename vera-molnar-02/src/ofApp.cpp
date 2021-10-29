@@ -283,7 +283,7 @@ void ofApp::setup() {
     ofEnableAntiAliasing();
     ofEnableSmoothing();
     ofSetCircleResolution(128);
-    ofSetLineWidth(3.0);
+    ofSetLineWidth(3);
 
     randomSquares[0] = transformSquare(durerSquare);
     for (int i = 1; i < 25; i++) {
@@ -297,7 +297,7 @@ void ofApp::update() {}
 //--------------------------------------------------------------
 void ofApp::draw() {
     ofBackground(18, 26, 33);
-    ofSetColor(222, 223, 226);
+    ofSetColor(222, 223, 226, 255 * 0.75);
 
     float w = ofGetWindowWidth();
     float h = ofGetWindowHeight();
