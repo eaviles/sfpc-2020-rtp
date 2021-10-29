@@ -283,8 +283,7 @@ void ofApp::setup() {
     ofEnableAntiAliasing();
     ofEnableSmoothing();
     ofSetCircleResolution(128);
-
-    ofSetLineWidth(2.0);
+    ofSetLineWidth(3.0);
 
     randomSquares[0] = transformSquare(durerSquare);
     for (int i = 1; i < 25; i++) {
